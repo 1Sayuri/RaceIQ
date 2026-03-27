@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RaceIQ — GPS Story Cards</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #F4F1EC;
+  --bg2: #EDE9E1;
+  --surface: #FFFFFF;
+  --surface2: #F9F7F4;
+  --border: #E2DDD5;
+  --border2: #D4CFC6;
+  --gold: #9A6F2F;
+  --gold-light: #C9A84C;
+  --gold-bg: #FDF6E8;
+  --teal: #1A7A6E;
+  --teal-light: #2AA898;
+  --teal-bg: #EBF7F5;
+  --red: #C0392B;
+  --red-bg: #FDF0EE;
+  --ink: #1C1A17;
+  --ink2: #3D3A34;
+  --muted: #7A7268;
+  --muted2: #A09890;
+  --ghost: #6B4FA8;
+  --ghost-bg: #F2EEFF;
+  --rocket: #C05C1A;
+  --rocket-bg: #FFF0E6;
+  --grinder: #1A7A6E;
+  --grinder-bg: #EBF7F5;
+  --gambler: #B03060;
+  --gambler-bg: #FDEEF3;
+  --shadow-sm: 0 1px 3px rgba(28,26,23,0.06), 0 1px 2px rgba(28,26,23,0.04);
+  --shadow-md: 0 4px 12px rgba(28,26,23,0.08), 0 2px 4px rgba(28,26,23,0.04);
+  --shadow-lg: 0 8px 24px rgba(28,26,23,0.1), 0 4px 8px rgba(28,26,23,0.06);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+}
+.app { max-width: 1100px; margin: 0 auto; padding: 0 20px 80px; }
+
+/* ── TICKER / NEWS BOARD ─────────────────────────────────────── */
+.news-board {
+  background: var(--ink);
+  margin: 0 -20px;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+.news-inner {
+  display: flex;
+  align-items: stretch;
+}
+.news-label {
+  background: var(--gold-light);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+  z-index: 2;
+}
+.ticker-wrap {
+  flex: 1;
+  overflow: hidden;
+  padding: 10px 0;
+}
+.ticker-track {
+  display: flex;
+  gap: 0;
+  animation: ticker 55s linear infinite;
+  width: max-content;
+}
+.ticker-track:hover { animation-play-state: paused; }
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 28px;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  white-space: nowrap;
+  cursor: default;
+}
+.ticker-item:hover .ticker-horse { color: var(--gold-light); }
+.ticker-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.ticker-race { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 500; }
+.ticker-horse { font-size: 12px; color: #fff; font-weight: 600; transition: color .2s; }
+.ticker-odds { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gold-light); }
+.ticker-sep { font-size: 10px; color: rgba(255,255,255,0.2); margin: 0 4px; }
+
+/* ── UPCOMING RACES PANEL ────────────────────────────────────── */
+.upcoming-section { padding: 20px 0 4px; }
+.upcoming-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.upcoming-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.upcoming-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.live-dot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--red);
+  font-weight: 600;
+}
+.live-pulse {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+.race-cards-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.race-news-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+  transition: all .2s;
+  cursor: default;
+}
+.race-news-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: var(--border2);
+}
+.rnc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.rnc-track {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.rnc-num {
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--bg2);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.rnc-race-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+.rnc-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.rnc-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+.rnc-tag-dist { background: var(--gold-bg); color: var(--gold); }
+.rnc-tag-surf { background: var(--bg2); color: var(--muted); }
+.rnc-tag-purse { background: var(--teal-bg); color: var(--teal); }
+.rnc-horses { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; }
+.rnc-horse-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 0;
+}
+.rnc-horse-name { font-size: 11px; color: var(--ink2); font-weight: 500; }
+.rnc-horse-odds {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+.rnc-horse-odds.fav {
+  color: var(--gold);
+  font-weight: 600;
+}
+.rnc-more { font-size: 10px; color: var(--muted2); margin-top: 4px; }
+
+/* ── MAIN HEADER ─────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-mark {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  border-radius: 11px;
+  display: grid; place-items: center;
+  font-size: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.logo-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--ink);
+}
+.logo-name span { color: var(--gold); }
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 1px; }
+.gps-badge {
+  background: var(--teal-bg);
+  border: 1px solid rgba(26,122,110,0.2);
+  color: var(--teal);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* ── TABS ────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 20px;
+  background: var(--surface);
+  padding: 4px;
+  border-radius: 12px;
+  width: fit-content;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+.tab {
+  padding: 8px 18px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  transition: all .2s;
+}
+.tab.active { background: var(--gold); color: #fff; box-shadow: var(--shadow-sm); }
+.tab:hover:not(.active) { color: var(--ink); background: var(--bg2); }
+
+/* ── RACE PILLS ──────────────────────────────────────────────── */
+.race-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 18px; }
+.rpill {
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--muted);
+  transition: all .2s;
+  box-shadow: var(--shadow-sm);
+}
+.rpill.active { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
+.rpill:hover:not(.active) { border-color: var(--border2); color: var(--ink); }
+
+/* ── HORSE GRID ──────────────────────────────────────────────── */
+.hgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.hbtn {
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  text-align: left;
+  transition: all .2s;
+  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.hbtn:hover { border-color: var(--border2); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.hbtn.active { border-color: var(--gold); background: var(--gold-bg); box-shadow: var(--shadow-md); }
+.hbtn-name { font-size: 12px; font-weight: 600; color: var(--ink); line-height: 1.3; margin-bottom: 5px; }
+.hbtn-foot { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--muted); }
+.pos-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: inline-grid; place-items: center;
+  font-size: 9px; font-weight: 700; flex-shrink: 0;
+}
+.arch-pip { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 2px 2px 0 0; }
+
+/* ── STORY CARD ──────────────────────────────────────────────── */
+.scard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp .3s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.scard-header {
+  padding: 22px 26px 18px;
+  background: linear-gradient(135deg, #FDFCFA, #F9F6F0);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.horse-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--ink);
+  line-height: 1.1;
+  margin-bottom: 9px;
+}
+.meta-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.mtag { padding: 3px 9px; border-radius: 12px; font-size: 10px; font-weight: 600; letter-spacing: .3px; }
+.mtag-race { background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(154,111,47,.15); }
+.mtag-surf { background: var(--bg2); color: var(--muted); }
+.mtag-purse { background: var(--teal-bg); color: var(--teal); border: 1px solid rgba(26,122,110,.15); }
+.card-finish { text-align: right; flex-shrink: 0; }
+.finish-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 54px; font-weight: 900; line-height: 1;
+}
+.finish-lbl { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+
+.arch-strip {
+  padding: 8px 26px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── CARD BODY TWO-COL ───────────────────────────────────────── */
+.card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 640px) { .card-body { grid-template-columns: 1fr; } }
+.col-left { padding: 20px 26px; border-right: 1px solid var(--border); }
+.col-right { padding: 20px 26px; }
+.sec-title {
+  font-size: 9px;
+  color: var(--muted2);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+/* PERCENTILE BARS */
+.pbar-list { display: flex; flex-direction: column; gap: 8px; }
+.pbar-row { display: flex; align-items: center; gap: 8px; }
+.pbar-label {
+  font-size: 10px;
+  color: var(--muted);
+  width: 112px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pbar-track {
+  flex: 1;
+  height: 5px;
+  background: var(--bg2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.pbar-fill { height: 100%; border-radius: 3px; transition: width .7s ease; }
+.pbar-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted2);
+  width: 26px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* METRIC CARDS GRID */
+.mgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.mcard {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.mcard-top { position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.mcard-name { font-size: 9px; color: var(--muted); margin-bottom: 3px; }
+.mcard-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.mcard-tag { font-size: 9px; font-weight: 700; }
+
+/* CHART */
+.chart-wrap { padding: 0 26px 20px; border-top: 1px solid var(--border); }
+.chart-inner {
+  background: var(--surface2);
+  border-radius: 12px;
+  padding: 14px 16px 10px;
+  border: 1px solid var(--border);
+  margin-top: 16px;
+}
+.chart-labs {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+.chart-lab { font-size: 9px; color: var(--muted2); }
+
+/* NARRATIVE */
+.narr-wrap { padding: 0 26px 22px; }
+.narr-box {
+  background: var(--teal-bg);
+  border: 1px solid rgba(26,122,110,.2);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+.narr-lbl {
+  font-size: 9px;
+  color: var(--teal);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+.narr-text {
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--ink2);
+  font-style: italic;
+}
+.share-row { display: flex; gap: 7px; margin-top: 13px; flex-wrap: wrap; }
+.sbtn {
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.sbtn-primary { background: var(--gold); color: #fff; }
+.sbtn-primary:hover { background: var(--gold-light); }
+.sbtn-sec { background: var(--surface); color: var(--ink2); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.sbtn-sec:hover { border-color: var(--border2); }
+
+/* ── LEADERBOARD ─────────────────────────────────────────────── */
+.lb { display: flex; flex-direction: column; gap: 26px; }
+.lb-head {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px; font-weight: 700;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 9px;
+}
+.lb-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: grid; place-items: center; font-size: 14px; flex-shrink: 0;
+}
+.lb-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+.lcard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 15px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: all .2s;
+}
+.lcard:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.lrank {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px; font-weight: 900;
+  color: var(--border2); flex-shrink: 0; width: 26px; text-align: center;
+}
+.lrank.r1 { color: var(--gold); }
+.lrank.r2 { color: #8A9BAD; }
+.lrank.r3 { color: #C97B3C; }
+.linfo { flex: 1; min-width: 0; }
+.lhorse { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lsub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.lstat { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; flex-shrink: 0; }
+
+/* ── TRENDS ──────────────────────────────────────────────────── */
+.tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.tcard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.thead2 { display: flex; align-items: center; gap: 9px; margin-bottom: 11px; }
+.ticon { font-size: 20px; }
+.ttitle { font-size: 14px; font-weight: 700; color: var(--ink); }
+.tsub { font-size: 10px; color: var(--muted); }
+.tbody { font-size: 12px; color: var(--muted); line-height: 1.7; }
+.thi { color: var(--ink); font-weight: 600; }
+.thook {
+  margin-top: 11px;
+  padding: 8px 12px;
+  background: var(--teal-bg);
+  border-radius: 9px;
+  border-left: 3px solid var(--teal);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--teal);
+}
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty .big { font-size: 48px; margin-bottom: 12px; }
+
+@media (max-width: 640px) {
+  .horse-title { font-size: 22px; }
+  .finish-num { font-size: 40px; }
+  .race-cards-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const RACE_DATA = [{"race_date":"2026-01-10","race_number":7,"horse_name":"Aunt Mo","official_position":7,"post_position":9,"morning_line_odds":"30/1","post_time_odds":46.52,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":54.5,"max_time_behind":4.107,"total_running_time":6.575,"pace_consistency":0.621,"total_strides":300.4,"total_distance_ran":2021.9,"ground_loss":-4578.1,"early_speed":5.051,"late_speed":23.858,"early_stride_len":6.298,"late_stride_len":6.929,"stride_delay":16.1,"speed_change_pct":372.29,"first_position":7,"mid_position":1,"pos_change_total":0,"position_history":[7,8,9,9,9,8,4,2,1,1,1,1,1,1,1,1,1,1,1,1],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[54.5,47.3,42.1,32.9,20.9,11.4,3.4,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"max_dist_behind_pct":13,"max_time_behind_pct":13,"total_running_time_pct":94,"pace_consistency_pct":46,"total_strides_pct":5,"total_distance_ran_pct":44,"ground_loss_pct":57,"early_speed_pct":62,"late_speed_pct":100,"early_stride_len_pct":6,"late_stride_len_pct":19,"stride_delay_pct":95,"speed_change_pct_pct":100,"archetype":"Ghost"},{"race_date":"2026-01-10","race_number":7,"horse_name":"Embrace Me","official_position":6,"post_position":8,"morning_line_odds":"10/1","post_time_odds":5.41,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":25.4,"max_time_behind":1.541,"total_running_time":7.557,"pace_consistency":1.262,"total_strides":284.8,"total_distance_ran":2027.7,"ground_loss":-4572.3,"early_speed":5.109,"late_speed":23.521,"early_stride_len":6.725,"late_stride_len":7.147,"stride_delay":15.3,"speed_change_pct":360.37,"first_position":6,"mid_position":10,"pos_change_total":0,"position_history":[6,6,6,6,7,9,9,9,9,10,10,10,10,10,10,10,10,10,10,10],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[18.7,17.9,17.8,16.5,14.0,12.4,12.4,15.4,19.1,23.1,25.4,24.9,24.9,24.9,21.8,19.4,20.8,21.5,20.4,16.8],"max_dist_behind_pct":43,"max_time_behind_pct":44,"total_running_time_pct":2,"pace_consistency_pct":3,"total_strides_pct":32,"total_distance_ran_pct":13,"ground_loss_pct":89,"early_speed_pct":86,"late_speed_pct":92,"early_stride_len_pct":27,"late_stride_len_pct":51,"stride_delay_pct":86,"speed_change_pct_pct":79,"archetype":"Gambler"},{"race_date":"2026-01-10","race_number":7,"horse_name":"Five a Side","official_position":4,"post_position":7,"morning_line_odds":"5/1","post_time_odds":6.07,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":8.5,"max_time_behind":0.514,"total_running_time":6.825,"pace_consistency":0.719,"total_strides":268.0,"total_distance_ran":2024.2,"ground_loss":-4575.8,"early_speed":5.121,"late_speed":23.671,"early_stride_len":7.07,"late_stride_len":7.753,"stride_delay":14.5,"speed_change_pct":362.22,"first_position":4,"mid_position":4,"pos_change_total":0,"position_history":[4,1,1,1,1,1,2,3,3,4,4,4,4,4,4,5,5,4,4,7],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[2.8,0.0,0.0,0.0,0.0,0.0,1.3,2.8,4.0,5.2,6.0,7.6,7.8,8.5,7.6,6.9,6.4,6.2,6.9,4.3],"max_dist_behind_pct":86,"max_time_behind_pct":87,"total_running_time_pct":62,"pace_consistency_pct":35,"total_strides_pct":97,"total_distance_ran_pct":29,"ground_loss_pct":73,"early_speed_pct":92,"late_speed_pct":97,"early_stride_len_pct":73,"late_stride_len_pct":100,"stride_delay_pct":52,"speed_change_pct_pct":90,"archetype":"Gambler"},{"race_date":"2026-01-10","race_number":7,"horse_name":"Good Game","official_position":5,"post_position":2,"morning_line_odds":"4/1","post_time_odds":4.16,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":15.2,"max_time_behind":0.921,"total_running_time":6.819,"pace_consistency":0.429,"total_strides":272.1,"total_distance_ran":2017.8,"ground_loss":-4582.2,"early_speed":5.09,"late_speed":23.501,"early_stride_len":7.169,"late_stride_len":7.37,"stride_delay":13.8,"speed_change_pct":361.7,"first_position":5,"mid_position":7,"pos_change_total":0,"position_history":[5,5,5,5,6,5,6,7,7,7,7,7,7,7,6,6,6,6,7,6],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[2.9,5.8,9.1,10.1,8.7,8.2,6.7,10.9,13.4,14.8,15.2,14.2,13.6,12.9,11.0,9.3,8.4,8.0,7.4,4.2],"max_dist_behind_pct":73,"max_time_behind_pct":75,"total_running_time_pct":65,"pace_consistency_pct":71,"total_strides_pct":86,"total_distance_ran_pct":81,"ground_loss_pct":29,"early_speed_pct":78,"late_speed_pct":90,"early_stride_len_pct":78,"late_stride_len_pct":83,"stride_delay_pct":11,"speed_change_pct_pct":84,"archetype":"Gambler"},{"race_date":"2026-01-10","race_number":7,"horse_name":"I'm a Sure Thing","official_position":10,"post_position":1,"morning_line_odds":"10/1","post_time_odds":11.36,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":97.8,"max_time_behind":7.367,"total_running_time":6.903,"pace_consistency":0.248,"total_strides":288.7,"total_distance_ran":2015.6,"ground_loss":-4584.4,"early_speed":5.018,"late_speed":23.247,"early_stride_len":6.264,"late_stride_len":7.343,"stride_delay":16.5,"speed_change_pct":363.31,"first_position":10,"mid_position":9,"pos_change_total":0,"position_history":[10,10,10,10,10,10,10,10,10,9,9,8,8,8,8,8,8,8,8,8],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[97.8,72.2,52.3,39.0,28.7,22.4,20.9,21.4,21.4,21.4,20.9,19.3,18.2,17.6,16.3,13.4,13.1,12.9,11.1,5.6],"max_dist_behind_pct":5,"max_time_behind_pct":5,"total_running_time_pct":51,"pace_consistency_pct":95,"total_strides_pct":25,"total_distance_ran_pct":95,"ground_loss_pct":6,"early_speed_pct":54,"late_speed_pct":86,"early_stride_len_pct":5,"late_stride_len_pct":81,"stride_delay_pct":97,"speed_change_pct_pct":92,"archetype":"Ghost"},{"race_date":"2026-01-10","race_number":7,"horse_name":"Meg's a Star","official_position":8,"post_position":4,"morning_line_odds":"10/1","post_time_odds":6.79,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":58.0,"max_time_behind":4.371,"total_running_time":6.802,"pace_consistency":0.743,"total_strides":288.2,"total_distance_ran":2023.9,"ground_loss":-4576.1,"early_speed":5.067,"late_speed":23.654,"early_stride_len":6.595,"late_stride_len":7.072,"stride_delay":15.3,"speed_change_pct":366.79,"first_position":8,"mid_position":5,"pos_change_total":0,"position_history":[8,7,8,8,8,7,7,5,5,5,5,5,5,5,5,4,4,5,6,5],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[58.0,42.7,33.7,24.8,16.5,11.3,6.9,6.0,6.5,7.7,8.2,9.3,9.1,8.8,7.6,6.8,6.2,6.4,7.1,3.9],"max_dist_behind_pct":10,"max_time_behind_pct":8,"total_running_time_pct":68,"pace_consistency_pct":32,"total_strides_pct":27,"total_distance_ran_pct":30,"ground_loss_pct":71,"early_speed_pct":71,"late_speed_pct":95,"early_stride_len_pct":16,"late_stride_len_pct":38,"stride_delay_pct":86,"speed_change_pct_pct":98,"archetype":"Ghost"},{"race_date":"2026-01-10","race_number":7,"horse_name":"Oraia","official_position":2,"post_position":6,"morning_line_odds":"15/1","post_time_odds":8.08,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":8.0,"max_time_behind":0.488,"total_running_time":6.718,"pace_consistency":0.383,"total_strides":276.8,"total_distance_ran":2017.0,"ground_loss":-4583.0,"early_speed":5.104,"late_speed":23.574,"early_stride_len":6.964,"late_stride_len":7.318,"stride_delay":14.7,"speed_change_pct":361.84,"first_position":2,"mid_position":3,"pos_change_total":0,"position_history":[2,3,3,3,3,4,3,4,4,3,3,3,3,3,3,3,3,3,3,3],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[1.8,3.2,6.5,6.6,5.1,4.0,3.0,4.4,4.7,4.7,5.2,5.6,7.0,8.0,7.3,6.4,5.9,5.9,5.3,2.4],"max_dist_behind_pct":89,"max_time_behind_pct":89,"total_running_time_pct":79,"pace_consistency_pct":81,"total_strides_pct":67,"total_distance_ran_pct":86,"ground_loss_pct":16,"early_speed_pct":83,"late_speed_pct":94,"early_stride_len_pct":52,"late_stride_len_pct":73,"stride_delay_pct":63,"speed_change_pct_pct":86,"archetype":"Grinder"},{"race_date":"2026-01-10","race_number":7,"horse_name":"Tricky Kitty","official_position":3,"post_position":5,"morning_line_odds":"7/2","post_time_odds":4.37,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":20.2,"max_time_behind":1.23,"total_running_time":7.06,"pace_consistency":0.993,"total_strides":279.8,"total_distance_ran":2027.4,"ground_loss":-4572.6,"early_speed":5.131,"late_speed":23.263,"early_stride_len":6.91,"late_stride_len":7.224,"stride_delay":14.4,"speed_change_pct":353.35,"first_position":3,"mid_position":8,"pos_change_total":0,"position_history":[3,4,4,4,5,6,8,8,8,8,8,9,9,9,9,9,9,9,9,9],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[2.2,3.9,8.3,9.4,8.1,8.6,10.2,13.9,16.2,16.6,18.8,19.4,19.3,20.2,19.0,15.9,15.6,15.4,13.2,8.3],"max_dist_behind_pct":60,"max_time_behind_pct":60,"total_running_time_pct":35,"pace_consistency_pct":13,"total_strides_pct":57,"total_distance_ran_pct":14,"ground_loss_pct":87,"early_speed_pct":98,"late_speed_pct":87,"early_stride_len_pct":43,"late_stride_len_pct":65,"stride_delay_pct":41,"speed_change_pct_pct":57,"archetype":"Gambler"},{"race_date":"2026-01-10","race_number":7,"horse_name":"Virgin Colada","official_position":1,"post_position":3,"morning_line_odds":"3/1","post_time_odds":4.64,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":11.7,"max_time_behind":0.711,"total_running_time":6.771,"pace_consistency":0.884,"total_strides":272.8,"total_distance_ran":2024.7,"ground_loss":-4575.3,"early_speed":5.13,"late_speed":23.386,"early_stride_len":7.097,"late_stride_len":7.264,"stride_delay":14.3,"speed_change_pct":355.9,"first_position":1,"mid_position":6,"pos_change_total":0,"position_history":[1,2,2,2,2,3,5,6,6,6,6,6,6,6,7,7,7,7,5,4],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[0.0,2.5,5.7,4.9,3.1,2.8,5.0,8.1,10.0,10.1,11.2,11.7,11.2,11.2,11.5,10.1,9.1,8.1,7.0,3.3],"max_dist_behind_pct":78,"max_time_behind_pct":79,"total_running_time_pct":73,"pace_consistency_pct":24,"total_strides_pct":79,"total_distance_ran_pct":22,"ground_loss_pct":79,"early_speed_pct":97,"late_speed_pct":89,"early_stride_len_pct":76,"late_stride_len_pct":68,"stride_delay_pct":33,"speed_change_pct_pct":65,"archetype":"Gambler"},{"race_date":"2026-01-10","race_number":7,"horse_name":"White Lilacs","official_position":9,"post_position":10,"morning_line_odds":"30/1","post_time_odds":55.21,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":69.1,"max_time_behind":5.203,"total_running_time":6.582,"pace_consistency":0.389,"total_strides":279.8,"total_distance_ran":2018.9,"ground_loss":-4581.1,"early_speed":5.088,"late_speed":23.682,"early_stride_len":6.514,"late_stride_len":7.539,"stride_delay":15.6,"speed_change_pct":365.45,"first_position":9,"mid_position":2,"pos_change_total":0,"position_history":[9,9,7,7,4,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[69.1,48.2,33.1,18.0,5.7,0.3,0.0,0.0,0.9,1.8,3.0,3.2,3.5,4.1,3.7,3.2,2.3,1.7,1.2,0.1],"max_dist_behind_pct":6,"max_time_behind_pct":6,"total_running_time_pct":92,"pace_consistency_pct":78,"total_strides_pct":57,"total_distance_ran_pct":63,"ground_loss_pct":38,"early_speed_pct":75,"late_speed_pct":98,"early_stride_len_pct":11,"late_stride_len_pct":90,"stride_delay_pct":89,"speed_change_pct_pct":94,"archetype":"Ghost"},{"race_date":"2026-01-15","race_number":8,"horse_name":"Copper Missile","official_position":3,"post_position":1,"morning_line_odds":"12/1","post_time_odds":9.41,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":26.2,"max_time_behind":1.603,"total_running_time":7.144,"pace_consistency":0.169,"total_strides":256.4,"total_distance_ran":2014.7,"ground_loss":-4585.3,"early_speed":5.062,"late_speed":22.243,"early_stride_len":7.657,"late_stride_len":7.665,"stride_delay":13.1,"speed_change_pct":339.38,"first_position":3,"mid_position":10,"pos_change_total":0,"position_history":[3,4,6,7,9,11,11,11,11,11,10,10,10,9,9,9,10,10,10,9],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[4.0,6.2,9.1,11.6,14.3,17.4,19.1,19.8,19.2,17.9,17.8,20.0,24.1,26.2,21.7,20.1,19.7,18.4,16.6,10.8],"max_dist_behind_pct":41,"max_time_behind_pct":43,"total_running_time_pct":29,"pace_consistency_pct":97,"total_strides_pct":100,"total_distance_ran_pct":97,"ground_loss_pct":5,"early_speed_pct":67,"late_speed_pct":22,"early_stride_len_pct":100,"late_stride_len_pct":97,"stride_delay_pct":2,"speed_change_pct_pct":13,"archetype":"Gambler"},{"race_date":"2026-01-15","race_number":8,"horse_name":"Hilliard","official_position":7,"post_position":6,"morning_line_odds":"6/1","post_time_odds":9.66,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":27.0,"max_time_behind":1.654,"total_running_time":7.16,"pace_consistency":0.557,"total_strides":272.2,"total_distance_ran":2020.6,"ground_loss":-4579.4,"early_speed":5.09,"late_speed":22.291,"early_stride_len":7.211,"late_stride_len":7.252,"stride_delay":14.1,"speed_change_pct":337.92,"first_position":7,"mid_position":11,"pos_change_total":0,"position_history":[7,9,11,11,11,10,9,10,10,10,11,11,9,10,10,10,9,9,9,10],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[16.6,15.0,17.4,16.9,15.3,17.4,17.8,17.3,17.3,17.0,17.8,20.2,23.6,27.0,23.2,20.2,19.4,17.7,15.4,11.1],"max_dist_behind_pct":37,"max_time_behind_pct":41,"total_running_time_pct":24,"pace_consistency_pct":56,"total_strides_pct":84,"total_distance_ran_pct":52,"ground_loss_pct":49,"early_speed_pct":78,"late_speed_pct":25,"early_stride_len_pct":86,"late_stride_len_pct":67,"stride_delay_pct":24,"speed_change_pct_pct":11,"archetype":"Gambler"},{"race_date":"2026-01-15","race_number":8,"horse_name":"Midnite in Finley","official_position":9,"post_position":9,"morning_line_odds":"10/1","post_time_odds":16.17,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":20.7,"max_time_behind":1.467,"total_running_time":6.494,"pace_consistency":0.137,"total_strides":269.1,"total_distance_ran":2014.2,"ground_loss":-4585.8,"early_speed":5.107,"late_speed":22.927,"early_stride_len":7.014,"late_stride_len":7.652,"stride_delay":14.7,"speed_change_pct":348.93,"first_position":9,"mid_position":1,"pos_change_total":0,"position_history":[9,8,4,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[20.7,13.0,6.7,1.6,0.2,0.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"max_dist_behind_pct":56,"max_time_behind_pct":52,"total_running_time_pct":97,"pace_consistency_pct":100,"total_strides_pct":94,"total_distance_ran_pct":100,"ground_loss_pct":3,"early_speed_pct":84,"late_speed_pct":68,"early_stride_len_pct":57,"late_stride_len_pct":95,"stride_delay_pct":63,"speed_change_pct_pct":38,"archetype":"Grinder"},{"race_date":"2026-01-15","race_number":8,"horse_name":"Modica","official_position":11,"post_position":11,"morning_line_odds":"20/1","post_time_odds":19.61,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":28.2,"max_time_behind":1.949,"total_running_time":7.298,"pace_consistency":1.0,"total_strides":291.4,"total_distance_ran":2029.5,"ground_loss":-4570.5,"early_speed":5.119,"late_speed":22.415,"early_stride_len":6.615,"late_stride_len":6.835,"stride_delay":15.7,"speed_change_pct":337.88,"first_position":11,"mid_position":8,"pos_change_total":0,"position_history":[11,11,10,9,8,8,7,8,8,8,8,9,11,11,11,11,11,11,11,11],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[27.6,19.8,15.7,13.1,12.0,13.2,13.6,14.5,14.1,12.6,12.6,17.4,24.1,28.2,25.3,22.8,20.1,18.7,17.8,13.4],"max_dist_behind_pct":33,"max_time_behind_pct":32,"total_running_time_pct":16,"pace_consistency_pct":11,"total_strides_pct":19,"total_distance_ran_pct":10,"ground_loss_pct":92,"early_speed_pct":90,"late_speed_pct":32,"early_stride_len_pct":17,"late_stride_len_pct":10,"stride_delay_pct":92,"speed_change_pct_pct":10,"archetype":"Gambler"},{"race_date":"2026-01-15","race_number":8,"horse_name":"Mount Horeb","official_position":8,"post_position":7,"morning_line_odds":"4/1","post_time_odds":3.59,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":18.3,"max_time_behind":1.295,"total_running_time":6.832,"pace_consistency":0.989,"total_strides":280.1,"total_distance_ran":2027.2,"ground_loss":-4572.8,"early_speed":5.155,"late_speed":23.041,"early_stride_len":6.89,"late_stride_len":7.162,"stride_delay":14.9,"speed_change_pct":346.94,"first_position":8,"mid_position":3,"pos_change_total":0,"position_history":[8,7,5,4,4,3,3,3,3,3,3,3,5,4,4,4,4,4,5,5],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[18.3,12.0,7.9,4.6,2.7,1.9,1.5,1.5,2.3,2.7,3.1,3.7,4.5,4.3,4.0,5.1,4.2,4.0,5.0,5.6],"max_dist_behind_pct":62,"max_time_behind_pct":56,"total_running_time_pct":60,"pace_consistency_pct":14,"total_strides_pct":54,"total_distance_ran_pct":16,"ground_loss_pct":86,"early_speed_pct":100,"late_speed_pct":79,"early_stride_len_pct":40,"late_stride_len_pct":54,"stride_delay_pct":70,"speed_change_pct_pct":35,"archetype":"Gambler"},{"race_date":"2026-01-15","race_number":8,"horse_name":"Obelisk","official_position":6,"post_position":5,"morning_line_odds":"30/1","post_time_odds":25.19,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":20.9,"max_time_behind":1.279,"total_running_time":7.036,"pace_consistency":0.872,"total_strides":276.1,"total_distance_ran":2024.5,"ground_loss":-4575.5,"early_speed":5.112,"late_speed":22.477,"early_stride_len":7.22,"late_stride_len":7.111,"stride_delay":14.0,"speed_change_pct":339.67,"first_position":6,"mid_position":9,"pos_change_total":0,"position_history":[6,6,8,10,10,9,10,9,9,9,9,8,8,8,8,8,8,8,8,7],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[9.0,10.2,12.9,14.7,15.0,16.5,17.9,17.1,16.3,14.7,13.8,16.8,19.4,20.9,19.0,16.0,14.8,13.4,12.4,9.0],"max_dist_behind_pct":54,"max_time_behind_pct":57,"total_running_time_pct":38,"pace_consistency_pct":25,"total_strides_pct":71,"total_distance_ran_pct":27,"ground_loss_pct":78,"early_speed_pct":87,"late_speed_pct":37,"early_stride_len_pct":87,"late_stride_len_pct":43,"stride_delay_pct":19,"speed_change_pct_pct":14,"archetype":"Gambler"},{"race_date":"2026-01-15","race_number":8,"horse_name":"Punxsutawney Phil","official_position":4,"post_position":8,"morning_line_odds":"30/1","post_time_odds":8.1,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":6.1,"max_time_behind":0.375,"total_running_time":6.744,"pace_consistency":0.78,"total_strides":272.6,"total_distance_ran":2024.5,"ground_loss":-4575.5,"early_speed":5.125,"late_speed":22.852,"early_stride_len":7.064,"late_stride_len":7.32,"stride_delay":14.3,"speed_change_pct":345.9,"first_position":4,"mid_position":5,"pos_change_total":0,"position_history":[4,3,3,5,5,5,5,5,5,5,5,5,4,5,5,5,5,5,4,4],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[4.9,4.7,5.3,4.6,3.6,4.0,4.2,4.7,5.2,5.5,4.7,5.8,4.2,4.4,4.5,6.1,5.2,5.0,4.7,4.2],"max_dist_behind_pct":90,"max_time_behind_pct":90,"total_running_time_pct":78,"pace_consistency_pct":30,"total_strides_pct":81,"total_distance_ran_pct":27,"ground_loss_pct":78,"early_speed_pct":94,"late_speed_pct":60,"early_stride_len_pct":70,"late_stride_len_pct":75,"stride_delay_pct":33,"speed_change_pct_pct":29,"archetype":"Gambler"},{"race_date":"2026-01-15","race_number":8,"horse_name":"Shankar","official_position":2,"post_position":2,"morning_line_odds":"12/1","post_time_odds":8.48,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":4.3,"max_time_behind":0.268,"total_running_time":6.586,"pace_consistency":0.381,"total_strides":272.4,"total_distance_ran":2017.4,"ground_loss":-4582.6,"early_speed":5.117,"late_speed":22.798,"early_stride_len":7.23,"late_stride_len":7.33,"stride_delay":14.2,"speed_change_pct":345.5,"first_position":2,"mid_position":4,"pos_change_total":0,"position_history":[2,2,2,3,3,4,4,4,4,4,4,4,3,3,3,3,3,3,3,2],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[0.1,1.3,2.8,3.2,2.5,2.7,3.5,3.9,3.9,4.1,4.3,4.3,3.1,3.1,2.9,3.3,3.1,2.9,3.3,1.5],"max_dist_behind_pct":94,"max_time_behind_pct":94,"total_running_time_pct":87,"pace_consistency_pct":83,"total_strides_pct":83,"total_distance_ran_pct":84,"ground_loss_pct":17,"early_speed_pct":89,"late_speed_pct":54,"early_stride_len_pct":90,"late_stride_len_pct":79,"stride_delay_pct":30,"speed_change_pct_pct":25,"archetype":"Gambler"},{"race_date":"2026-01-15","race_number":8,"horse_name":"Sugoi","official_position":1,"post_position":10,"morning_line_odds":"5/1","post_time_odds":7.26,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":2.9,"max_time_behind":0.181,"total_running_time":6.655,"pace_consistency":0.536,"total_strides":282.7,"total_distance_ran":2020.2,"ground_loss":-4579.8,"early_speed":5.126,"late_speed":23.016,"early_stride_len":6.895,"late_stride_len":7.063,"stride_delay":14.6,"speed_change_pct":349.03,"first_position":1,"mid_position":2,"pos_change_total":0,"position_history":[1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,3],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[0.0,0.0,0.0,0.0,0.0,0.0,0.2,0.6,0.9,1.3,1.7,2.9,2.3,1.0,0.0,1.5,1.6,1.6,2.1,2.7],"max_dist_behind_pct":95,"max_time_behind_pct":95,"total_running_time_pct":84,"pace_consistency_pct":57,"total_strides_pct":41,"total_distance_ran_pct":56,"ground_loss_pct":46,"early_speed_pct":95,"late_speed_pct":76,"early_stride_len_pct":41,"late_stride_len_pct":37,"stride_delay_pct":59,"speed_change_pct_pct":40,"archetype":"Gambler"},{"race_date":"2026-01-15","race_number":8,"horse_name":"The Hidden Chamber","official_position":5,"post_position":4,"morning_line_odds":"6/1","post_time_odds":4.97,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":14.2,"max_time_behind":0.881,"total_running_time":6.862,"pace_consistency":0.59,"total_strides":271.1,"total_distance_ran":2022.2,"ground_loss":-4577.8,"early_speed":5.103,"late_speed":22.589,"early_stride_len":7.173,"late_stride_len":7.438,"stride_delay":13.9,"speed_change_pct":342.64,"first_position":5,"mid_position":7,"pos_change_total":0,"position_history":[5,5,7,6,6,6,6,6,6,7,7,7,6,6,6,6,6,6,6,6],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[5.3,6.8,9.6,9.0,7.7,8.4,8.4,8.8,10.0,10.1,10.4,13.3,14.2,13.4,11.6,10.6,10.4,9.6,8.8,6.1],"max_dist_behind_pct":75,"max_time_behind_pct":76,"total_running_time_pct":57,"pace_consistency_pct":51,"total_strides_pct":89,"total_distance_ran_pct":40,"ground_loss_pct":62,"early_speed_pct":81,"late_speed_pct":43,"early_stride_len_pct":79,"late_stride_len_pct":86,"stride_delay_pct":16,"speed_change_pct_pct":19,"archetype":"Gambler"},{"race_date":"2026-01-15","race_number":8,"horse_name":"Warlander","official_position":10,"post_position":3,"morning_line_odds":"12/1","post_time_odds":5.39,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":21.6,"max_time_behind":1.529,"total_running_time":7.043,"pace_consistency":0.424,"total_strides":289.1,"total_distance_ran":2017.8,"ground_loss":-4582.2,"early_speed":5.096,"late_speed":22.519,"early_stride_len":6.65,"late_stride_len":6.929,"stride_delay":15.4,"speed_change_pct":341.93,"first_position":10,"mid_position":6,"pos_change_total":0,"position_history":[10,10,9,8,7,7,8,7,7,6,6,6,7,7,7,7,7,7,7,8],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[21.6,17.4,14.7,12.8,11.2,12.1,13.8,14.0,12.0,9.5,9.0,12.9,15.8,17.5,16.3,14.8,14.5,12.8,12.0,9.2],"max_dist_behind_pct":51,"max_time_behind_pct":46,"total_running_time_pct":37,"pace_consistency_pct":73,"total_strides_pct":24,"total_distance_ran_pct":81,"ground_loss_pct":29,"early_speed_pct":79,"late_speed_pct":38,"early_stride_len_pct":22,"late_stride_len_pct":19,"stride_delay_pct":87,"speed_change_pct_pct":17,"archetype":"Gambler"},{"race_date":"2026-02-12","race_number":10,"horse_name":"Accredit","official_position":4,"post_position":9,"morning_line_odds":"12/1","post_time_odds":4.28,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":12.7,"max_time_behind":0.945,"total_running_time":6.585,"pace_consistency":0.691,"total_strides":274.7,"total_distance_ran":2021.7,"ground_loss":-4578.3,"early_speed":5.066,"late_speed":23.126,"early_stride_len":6.952,"late_stride_len":7.468,"stride_delay":14.6,"speed_change_pct":356.47,"first_position":4,"mid_position":2,"pos_change_total":0,"position_history":[4,4,2,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,2],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[12.7,7.9,2.9,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.7,0.8,0.3,0.0,0.0,0.0,0.0,0.0,0.0,0.6],"max_dist_behind_pct":76,"max_time_behind_pct":73,"total_running_time_pct":89,"pace_consistency_pct":37,"total_strides_pct":76,"total_distance_ran_pct":48,"ground_loss_pct":56,"early_speed_pct":70,"late_speed_pct":81,"early_stride_len_pct":51,"late_stride_len_pct":89,"stride_delay_pct":59,"speed_change_pct_pct":68,"archetype":"Gambler"},{"race_date":"2026-02-12","race_number":10,"horse_name":"Compton","official_position":3,"post_position":10,"morning_line_odds":"30/1","post_time_odds":20.84,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":23.7,"max_time_behind":1.473,"total_running_time":7.007,"pace_consistency":0.934,"total_strides":277.0,"total_distance_ran":2027.9,"ground_loss":-4572.1,"early_speed":5.066,"late_speed":22.821,"early_stride_len":7.047,"late_stride_len":7.215,"stride_delay":14.5,"speed_change_pct":350.46,"first_position":3,"mid_position":8,"pos_change_total":0,"position_history":[3,3,3,4,5,6,7,7,8,8,8,9,9,9,8,9,8,8,7,7],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[8.4,7.3,6.0,5.2,8.1,11.9,17.5,21.6,22.1,22.1,23.4,23.7,22.1,18.4,17.5,14.9,10.9,13.3,12.0,7.7],"max_dist_behind_pct":46,"max_time_behind_pct":51,"total_running_time_pct":41,"pace_consistency_pct":17,"total_strides_pct":65,"total_distance_ran_pct":11,"ground_loss_pct":90,"early_speed_pct":70,"late_speed_pct":57,"early_stride_len_pct":65,"late_stride_len_pct":63,"stride_delay_pct":52,"speed_change_pct_pct":51,"archetype":"Gambler"},{"race_date":"2026-02-12","race_number":10,"horse_name":"Copper Missile","official_position":1,"post_position":8,"morning_line_odds":"9/2","post_time_odds":2.75,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":17.1,"max_time_behind":1.046,"total_running_time":6.939,"pace_consistency":0.89,"total_strides":259.6,"total_distance_ran":2023.7,"ground_loss":-4576.3,"early_speed":5.078,"late_speed":22.865,"early_stride_len":7.502,"late_stride_len":7.738,"stride_delay":13.6,"speed_change_pct":350.28,"first_position":1,"mid_position":6,"pos_change_total":0,"position_history":[1,1,1,2,3,4,5,5,5,6,6,6,7,7,7,7,6,6,6,6],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[0.0,0.0,0.0,1.0,3.9,7.3,11.6,15.6,15.8,16.5,17.1,16.4,14.0,13.3,12.5,11.3,9.0,9.4,10.0,6.6],"max_dist_behind_pct":68,"max_time_behind_pct":70,"total_running_time_pct":46,"pace_consistency_pct":22,"total_strides_pct":98,"total_distance_ran_pct":33,"ground_loss_pct":68,"early_speed_pct":73,"late_speed_pct":62,"early_stride_len_pct":98,"late_stride_len_pct":98,"stride_delay_pct":6,"speed_change_pct_pct":46,"archetype":"Gambler"},{"race_date":"2026-02-12","race_number":10,"horse_name":"Devil Anse","official_position":2,"post_position":4,"morning_line_odds":"15/1","post_time_odds":6.47,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":22.8,"max_time_behind":1.418,"total_running_time":7.15,"pace_consistency":0.911,"total_strides":279.7,"total_distance_ran":2023.8,"ground_loss":-4576.2,"early_speed":5.06,"late_speed":23.026,"early_stride_len":7.028,"late_stride_len":7.16,"stride_delay":14.5,"speed_change_pct":355.09,"first_position":2,"mid_position":7,"pos_change_total":0,"position_history":[2,2,4,7,7,8,8,8,7,7,7,7,6,6,6,6,7,9,9,9],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[3.8,6.8,9.0,11.1,14.1,17.7,21.2,22.8,21.6,20.3,19.3,16.8,13.3,12.8,12.5,10.5,10.5,14.7,14.7,10.1],"max_dist_behind_pct":48,"max_time_behind_pct":54,"total_running_time_pct":27,"pace_consistency_pct":19,"total_strides_pct":59,"total_distance_ran_pct":32,"ground_loss_pct":70,"early_speed_pct":65,"late_speed_pct":78,"early_stride_len_pct":60,"late_stride_len_pct":52,"stride_delay_pct":52,"speed_change_pct_pct":63,"archetype":"Gambler"},{"race_date":"2026-02-12","race_number":10,"horse_name":"Fayette Spirit","official_position":10,"post_position":6,"morning_line_odds":"20/1","post_time_odds":48.02,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":108.3,"max_time_behind":8.073,"total_running_time":6.683,"pace_consistency":0.661,"total_strides":305.5,"total_distance_ran":2022.0,"ground_loss":-4578.0,"early_speed":5.027,"late_speed":23.132,"early_stride_len":5.918,"late_stride_len":6.95,"stride_delay":17.8,"speed_change_pct":360.14,"first_position":10,"mid_position":1,"pos_change_total":0,"position_history":[10,10,10,10,8,5,2,2,2,1,1,1,1,2,2,2,2,2,3,3],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[108.3,70.4,41.0,24.6,15.2,8.1,4.6,1.8,0.3,0.0,0.0,0.0,0.0,2.0,1.6,1.1,1.5,3.1,4.1,2.2],"max_dist_behind_pct":3,"max_time_behind_pct":3,"total_running_time_pct":83,"pace_consistency_pct":43,"total_strides_pct":2,"total_distance_ran_pct":43,"ground_loss_pct":59,"early_speed_pct":59,"late_speed_pct":83,"early_stride_len_pct":2,"late_stride_len_pct":22,"stride_delay_pct":100,"speed_change_pct_pct":76,"archetype":"Ghost"},{"race_date":"2026-02-12","race_number":10,"horse_name":"Global Sensation","official_position":8,"post_position":7,"morning_line_odds":"6/1","post_time_odds":5.27,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":31.1,"max_time_behind":2.321,"total_running_time":6.551,"pace_consistency":0.457,"total_strides":285.0,"total_distance_ran":2018.0,"ground_loss":-4582.0,"early_speed":5.052,"late_speed":22.772,"early_stride_len":6.748,"late_stride_len":7.049,"stride_delay":14.8,"speed_change_pct":350.72,"first_position":8,"mid_position":4,"pos_change_total":0,"position_history":[8,8,7,5,4,3,4,4,4,4,4,4,4,4,4,4,3,3,2,1],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[31.1,20.7,13.3,8.0,6.2,6.5,9.1,11.8,10.6,9.0,8.5,7.7,6.2,7.4,6.4,5.5,3.9,3.6,2.1,0.0],"max_dist_behind_pct":25,"max_time_behind_pct":21,"total_running_time_pct":95,"pace_consistency_pct":68,"total_strides_pct":30,"total_distance_ran_pct":71,"ground_loss_pct":32,"early_speed_pct":63,"late_speed_pct":51,"early_stride_len_pct":30,"late_stride_len_pct":35,"stride_delay_pct":67,"speed_change_pct_pct":52,"archetype":"Gambler"},{"race_date":"2026-02-12","race_number":10,"horse_name":"Hilliard","official_position":9,"post_position":5,"morning_line_odds":"8/1","post_time_odds":11.64,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":55.5,"max_time_behind":4.135,"total_running_time":7.293,"pace_consistency":0.684,"total_strides":282.9,"total_distance_ran":2022.5,"ground_loss":-4577.5,"early_speed":5.012,"late_speed":22.639,"early_stride_len":6.712,"late_stride_len":7.211,"stride_delay":15.0,"speed_change_pct":351.7,"first_position":9,"mid_position":10,"pos_change_total":0,"position_history":[9,9,9,9,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[55.5,38.2,28.1,22.7,22.3,25.0,28.6,32.0,32.2,32.6,32.1,30.2,27.6,25.4,25.9,20.4,17.8,19.7,18.2,12.5],"max_dist_behind_pct":11,"max_time_behind_pct":11,"total_running_time_pct":17,"pace_consistency_pct":38,"total_strides_pct":40,"total_distance_ran_pct":38,"ground_loss_pct":65,"early_speed_pct":46,"late_speed_pct":44,"early_stride_len_pct":25,"late_stride_len_pct":60,"stride_delay_pct":73,"speed_change_pct_pct":54,"archetype":"Ghost"},{"race_date":"2026-02-12","race_number":10,"horse_name":"Obelisk","official_position":5,"post_position":2,"morning_line_odds":"20/1","post_time_odds":6.26,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":27.5,"max_time_behind":1.712,"total_running_time":7.117,"pace_consistency":0.284,"total_strides":280.2,"total_distance_ran":2015.9,"ground_loss":-4584.1,"early_speed":4.994,"late_speed":22.952,"early_stride_len":7.01,"late_stride_len":7.035,"stride_delay":14.5,"speed_change_pct":359.62,"first_position":5,"mid_position":9,"pos_change_total":0,"position_history":[5,6,8,8,9,9,9,9,9,9,9,8,8,8,9,8,9,7,8,8],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[12.7,13.8,13.6,13.7,17.5,23.1,25.6,27.5,26.3,25.5,24.9,22.8,19.8,18.3,17.6,13.4,10.9,12.8,12.0,9.6],"max_dist_behind_pct":35,"max_time_behind_pct":40,"total_running_time_pct":32,"pace_consistency_pct":90,"total_strides_pct":52,"total_distance_ran_pct":92,"ground_loss_pct":10,"early_speed_pct":38,"late_speed_pct":70,"early_stride_len_pct":56,"late_stride_len_pct":32,"stride_delay_pct":52,"speed_change_pct_pct":75,"archetype":"Grinder"},{"race_date":"2026-02-12","race_number":10,"horse_name":"Warlander","official_position":7,"post_position":1,"morning_line_odds":"10/1","post_time_odds":5.74,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":26.8,"max_time_behind":1.997,"total_running_time":6.745,"pace_consistency":0.354,"total_strides":292.1,"total_distance_ran":2017.5,"ground_loss":-4582.5,"early_speed":5.05,"late_speed":22.964,"early_stride_len":6.424,"late_stride_len":6.914,"stride_delay":15.7,"speed_change_pct":354.77,"first_position":7,"mid_position":3,"pos_change_total":0,"position_history":[7,7,5,3,2,2,3,3,3,3,3,3,3,3,3,3,4,4,4,5],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[26.8,17.3,10.0,4.6,3.4,3.8,6.5,8.1,6.9,6.0,5.1,4.6,2.8,3.8,4.6,4.3,4.6,5.6,4.4,3.3],"max_dist_behind_pct":38,"max_time_behind_pct":29,"total_running_time_pct":76,"pace_consistency_pct":86,"total_strides_pct":17,"total_distance_ran_pct":83,"ground_loss_pct":19,"early_speed_pct":60,"late_speed_pct":73,"early_stride_len_pct":10,"late_stride_len_pct":14,"stride_delay_pct":92,"speed_change_pct_pct":62,"archetype":"Grinder"},{"race_date":"2026-02-12","race_number":10,"horse_name":"Zapruder","official_position":6,"post_position":3,"morning_line_odds":"20/1","post_time_odds":30.16,"distance":10.0,"surface":"D","race_type":"AOC","purse":102000,"max_dist_behind":17.8,"max_time_behind":1.108,"total_running_time":6.745,"pace_consistency":0.401,"total_strides":270.9,"total_distance_ran":2018.6,"ground_loss":-4581.4,"early_speed":5.017,"late_speed":22.899,"early_stride_len":7.194,"late_stride_len":7.424,"stride_delay":13.9,"speed_change_pct":356.45,"first_position":6,"mid_position":5,"pos_change_total":0,"position_history":[6,5,6,6,6,7,6,6,6,5,5,5,5,5,5,5,5,5,5,4],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[13.0,11.5,10.1,9.8,11.5,13.2,15.8,17.8,15.8,14.2,14.1,12.9,10.6,10.1,7.3,6.1,5.4,6.0,5.6,3.3],"max_dist_behind_pct":65,"max_time_behind_pct":68,"total_running_time_pct":76,"pace_consistency_pct":76,"total_strides_pct":90,"total_distance_ran_pct":68,"ground_loss_pct":33,"early_speed_pct":51,"late_speed_pct":65,"early_stride_len_pct":83,"late_stride_len_pct":84,"stride_delay_pct":16,"speed_change_pct_pct":67,"archetype":"Gambler"},{"race_date":"2026-02-20","race_number":8,"horse_name":"Carcano","official_position":2,"post_position":5,"morning_line_odds":"5/1","post_time_odds":8.45,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":10.5,"max_time_behind":0.688,"total_running_time":6.711,"pace_consistency":0.249,"total_strides":281.0,"total_distance_ran":2015.8,"ground_loss":-4584.2,"early_speed":4.951,"late_speed":22.813,"early_stride_len":7.032,"late_stride_len":7.316,"stride_delay":14.1,"speed_change_pct":360.77,"first_position":2,"mid_position":3,"pos_change_total":0,"position_history":[2,2,2,2,2,2,3,4,3,3,3,3,3,3,3,4,4,4,3,3],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[5.3,3.1,1.3,1.7,2.9,4.2,4.2,5.6,4.9,6.3,10.0,10.5,8.9,9.7,8.9,8.4,9.1,8.3,6.9,3.8],"max_dist_behind_pct":83,"max_time_behind_pct":81,"total_running_time_pct":81,"pace_consistency_pct":94,"total_strides_pct":48,"total_distance_ran_pct":94,"ground_loss_pct":8,"early_speed_pct":10,"late_speed_pct":56,"early_stride_len_pct":63,"late_stride_len_pct":71,"stride_delay_pct":24,"speed_change_pct_pct":81,"archetype":"Gambler"},{"race_date":"2026-02-20","race_number":8,"horse_name":"Coiled","official_position":3,"post_position":6,"morning_line_odds":"6/1","post_time_odds":5.86,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":15.2,"max_time_behind":0.973,"total_running_time":7.134,"pace_consistency":0.499,"total_strides":279.1,"total_distance_ran":2017.8,"ground_loss":-4582.2,"early_speed":4.955,"late_speed":22.9,"early_stride_len":7.176,"late_stride_len":7.215,"stride_delay":14.1,"speed_change_pct":362.15,"first_position":3,"mid_position":7,"pos_change_total":0,"position_history":[3,3,4,6,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[6.6,10.7,12.0,12.3,9.2,10.8,10.6,11.8,10.7,12.4,14.7,14.9,13.1,14.4,13.5,14.0,15.2,14.7,14.6,10.8],"max_dist_behind_pct":73,"max_time_behind_pct":71,"total_running_time_pct":30,"pace_consistency_pct":60,"total_strides_pct":62,"total_distance_ran_pct":81,"ground_loss_pct":29,"early_speed_pct":17,"late_speed_pct":67,"early_stride_len_pct":81,"late_stride_len_pct":63,"stride_delay_pct":24,"speed_change_pct_pct":89,"archetype":"Gambler"},{"race_date":"2026-02-20","race_number":8,"horse_name":"Happy Happy Day (ARG)","official_position":9,"post_position":7,"morning_line_odds":"8/1","post_time_odds":14.85,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":31.2,"max_time_behind":1.995,"total_running_time":7.494,"pace_consistency":0.97,"total_strides":292.7,"total_distance_ran":2025.1,"ground_loss":-4574.9,"early_speed":4.961,"late_speed":22.17,"early_stride_len":6.86,"late_stride_len":6.788,"stride_delay":14.7,"speed_change_pct":346.9,"first_position":9,"mid_position":12,"pos_change_total":0,"position_history":[9,9,10,9,10,11,11,11,11,12,12,12,12,12,12,12,12,12,10,11],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[28.8,26.0,22.0,19.1,17.1,18.0,18.7,18.6,21.9,27.6,31.2,29.4,30.5,30.1,29.5,29.0,30.9,28.3,22.5,16.8],"max_dist_behind_pct":24,"max_time_behind_pct":30,"total_running_time_pct":5,"pace_consistency_pct":16,"total_strides_pct":16,"total_distance_ran_pct":17,"ground_loss_pct":84,"early_speed_pct":19,"late_speed_pct":19,"early_stride_len_pct":37,"late_stride_len_pct":6,"stride_delay_pct":63,"speed_change_pct_pct":33,"archetype":"Gambler"},{"race_date":"2026-02-20","race_number":8,"horse_name":"Lac Macaza","official_position":7,"post_position":2,"morning_line_odds":"15/1","post_time_odds":10.33,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":22.7,"max_time_behind":1.507,"total_running_time":7.411,"pace_consistency":0.665,"total_strides":271.3,"total_distance_ran":2022.5,"ground_loss":-4577.5,"early_speed":4.952,"late_speed":22.737,"early_stride_len":7.384,"late_stride_len":7.33,"stride_delay":13.7,"speed_change_pct":359.18,"first_position":7,"mid_position":10,"pos_change_total":0,"position_history":[7,7,8,8,9,9,9,9,10,10,10,9,9,9,9,9,9,9,9,9],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[22.3,21.4,19.6,17.7,14.8,14.3,14.2,15.3,15.7,18.7,21.9,21.0,19.0,19.8,18.4,19.9,21.8,22.7,21.7,15.4],"max_dist_behind_pct":49,"max_time_behind_pct":48,"total_running_time_pct":10,"pace_consistency_pct":41,"total_strides_pct":87,"total_distance_ran_pct":38,"ground_loss_pct":65,"early_speed_pct":11,"late_speed_pct":48,"early_stride_len_pct":95,"late_stride_len_pct":79,"stride_delay_pct":10,"speed_change_pct_pct":73,"archetype":"Gambler"},{"race_date":"2026-02-20","race_number":8,"horse_name":"Mount Rundle","official_position":5,"post_position":12,"morning_line_odds":"15/1","post_time_odds":15.34,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":20.5,"max_time_behind":1.227,"total_running_time":7.153,"pace_consistency":1.112,"total_strides":268.5,"total_distance_ran":2030.7,"ground_loss":-4569.3,"early_speed":4.993,"late_speed":22.566,"early_stride_len":7.419,"late_stride_len":7.553,"stride_delay":13.5,"speed_change_pct":351.94,"first_position":5,"mid_position":8,"pos_change_total":0,"position_history":[5,4,3,4,6,6,8,8,8,8,8,8,8,8,8,8,8,8,8,8],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[13.8,12.5,11.6,11.2,8.9,9.3,11.0,13.0,12.9,15.3,18.4,18.8,17.8,18.7,17.9,17.6,19.9,20.5,18.8,11.1],"max_dist_behind_pct":59,"max_time_behind_pct":62,"total_running_time_pct":25,"pace_consistency_pct":6,"total_strides_pct":95,"total_distance_ran_pct":3,"ground_loss_pct":98,"early_speed_pct":37,"late_speed_pct":41,"early_stride_len_pct":97,"late_stride_len_pct":92,"stride_delay_pct":5,"speed_change_pct_pct":56,"archetype":"Gambler"},{"race_date":"2026-02-20","race_number":8,"horse_name":"Mutaawid","official_position":10,"post_position":10,"morning_line_odds":"4/1","post_time_odds":5.68,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":32.3,"max_time_behind":2.094,"total_running_time":7.537,"pace_consistency":1.212,"total_strides":298.9,"total_distance_ran":2030.3,"ground_loss":-4569.7,"early_speed":4.966,"late_speed":22.764,"early_stride_len":6.593,"late_stride_len":6.729,"stride_delay":15.2,"speed_change_pct":358.4,"first_position":10,"mid_position":9,"pos_change_total":0,"position_history":[10,11,12,12,12,10,10,10,9,9,9,10,10,10,10,10,10,10,12,12],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[31.0,32.3,30.2,25.8,19.6,16.3,14.4,15.9,14.8,17.5,21.3,21.3,21.6,21.9,21.5,21.0,23.6,25.0,23.2,17.5],"max_dist_behind_pct":21,"max_time_behind_pct":25,"total_running_time_pct":3,"pace_consistency_pct":5,"total_strides_pct":8,"total_distance_ran_pct":5,"ground_loss_pct":97,"early_speed_pct":25,"late_speed_pct":49,"early_stride_len_pct":14,"late_stride_len_pct":3,"stride_delay_pct":81,"speed_change_pct_pct":71,"archetype":"Gambler"},{"race_date":"2026-02-20","race_number":8,"horse_name":"Quadra Island","official_position":11,"post_position":3,"morning_line_odds":"15/1","post_time_odds":15.79,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":44.4,"max_time_behind":2.999,"total_running_time":6.792,"pace_consistency":0.148,"total_strides":293.9,"total_distance_ran":2014.2,"ground_loss":-4585.8,"early_speed":4.918,"late_speed":22.955,"early_stride_len":6.635,"late_stride_len":6.986,"stride_delay":15.1,"speed_change_pct":366.73,"first_position":11,"mid_position":5,"pos_change_total":0,"position_history":[11,12,11,11,8,8,6,6,6,6,5,5,4,4,4,3,3,3,4,4],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[44.4,35.9,28.0,20.7,13.9,10.8,9.9,10.7,9.2,10.7,11.5,11.4,9.7,9.9,9.2,7.9,8.6,8.2,8.1,5.2],"max_dist_behind_pct":17,"max_time_behind_pct":19,"total_running_time_pct":70,"pace_consistency_pct":98,"total_strides_pct":11,"total_distance_ran_pct":100,"ground_loss_pct":3,"early_speed_pct":5,"late_speed_pct":71,"early_stride_len_pct":19,"late_stride_len_pct":29,"stride_delay_pct":78,"speed_change_pct_pct":97,"archetype":"Ghost"},{"race_date":"2026-02-20","race_number":8,"horse_name":"Siesta Key","official_position":4,"post_position":9,"morning_line_odds":"5/1","post_time_odds":5.72,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":29.2,"max_time_behind":1.858,"total_running_time":7.473,"pace_consistency":0.3,"total_strides":279.5,"total_distance_ran":2016.8,"ground_loss":-4583.2,"early_speed":4.918,"late_speed":22.454,"early_stride_len":7.307,"late_stride_len":7.035,"stride_delay":13.5,"speed_change_pct":356.58,"first_position":4,"mid_position":11,"pos_change_total":0,"position_history":[4,5,9,10,11,12,12,12,12,11,11,11,11,11,11,11,11,11,11,10],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[12.9,17.5,19.8,20.0,18.1,19.5,20.8,22.5,24.0,26.5,29.2,27.4,26.6,26.7,26.7,25.7,26.6,25.9,22.8,16.4],"max_dist_behind_pct":30,"max_time_behind_pct":37,"total_running_time_pct":6,"pace_consistency_pct":89,"total_strides_pct":60,"total_distance_ran_pct":89,"ground_loss_pct":14,"early_speed_pct":5,"late_speed_pct":33,"early_stride_len_pct":92,"late_stride_len_pct":32,"stride_delay_pct":5,"speed_change_pct_pct":70,"archetype":"Gambler"},{"race_date":"2026-02-20","race_number":8,"horse_name":"The Minkster","official_position":12,"post_position":4,"morning_line_odds":"20/1","post_time_odds":35.87,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":45.1,"max_time_behind":3.043,"total_running_time":6.481,"pace_consistency":0.586,"total_strides":278.2,"total_distance_ran":2021.4,"ground_loss":-4578.6,"early_speed":4.954,"late_speed":22.891,"early_stride_len":7.015,"late_stride_len":7.466,"stride_delay":14.5,"speed_change_pct":362.06,"first_position":12,"mid_position":2,"pos_change_total":0,"position_history":[12,10,6,3,3,3,2,2,2,2,2,2,2,2,2,2,2,2,2,1],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[45.1,28.2,16.5,10.4,7.0,5.1,4.1,4.0,2.8,4.0,5.8,4.2,3.8,4.0,3.5,3.3,4.2,3.5,2.2,0.0],"max_dist_behind_pct":16,"max_time_behind_pct":17,"total_running_time_pct":100,"pace_consistency_pct":52,"total_strides_pct":63,"total_distance_ran_pct":49,"ground_loss_pct":52,"early_speed_pct":16,"late_speed_pct":63,"early_stride_len_pct":59,"late_stride_len_pct":87,"stride_delay_pct":52,"speed_change_pct_pct":87,"archetype":"Ghost"},{"race_date":"2026-02-20","race_number":8,"horse_name":"Tickled Quist","official_position":1,"post_position":1,"morning_line_odds":"9/2","post_time_odds":3.84,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":0.1,"max_time_behind":0.009,"total_running_time":6.49,"pace_consistency":0.486,"total_strides":283.5,"total_distance_ran":2018.7,"ground_loss":-4581.3,"early_speed":4.982,"late_speed":23.233,"early_stride_len":6.994,"late_stride_len":7.135,"stride_delay":14.4,"speed_change_pct":366.37,"first_position":1,"mid_position":1,"pos_change_total":0,"position_history":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.1],"max_dist_behind_pct":97,"max_time_behind_pct":97,"total_running_time_pct":98,"pace_consistency_pct":62,"total_strides_pct":37,"total_distance_ran_pct":67,"ground_loss_pct":35,"early_speed_pct":30,"late_speed_pct":84,"early_stride_len_pct":54,"late_stride_len_pct":48,"stride_delay_pct":41,"speed_change_pct_pct":95,"archetype":"Gambler"},{"race_date":"2026-02-20","race_number":8,"horse_name":"Time for Trouble","official_position":8,"post_position":11,"morning_line_odds":"15/1","post_time_odds":6.98,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":28.4,"max_time_behind":1.92,"total_running_time":6.891,"pace_consistency":1.309,"total_strides":289.5,"total_distance_ran":2033.8,"ground_loss":-4566.2,"early_speed":4.993,"late_speed":22.984,"early_stride_len":7.03,"late_stride_len":6.926,"stride_delay":14.4,"speed_change_pct":360.29,"first_position":8,"mid_position":4,"pos_change_total":0,"position_history":[8,8,7,7,5,5,4,3,4,4,4,4,5,5,5,5,5,5,5,6],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[28.4,24.4,19.4,13.8,8.9,7.2,5.0,5.0,5.1,7.6,10.3,10.9,10.6,11.1,9.4,10.0,9.9,10.0,10.6,6.8],"max_dist_behind_pct":32,"max_time_behind_pct":33,"total_running_time_pct":52,"pace_consistency_pct":2,"total_strides_pct":22,"total_distance_ran_pct":2,"ground_loss_pct":100,"early_speed_pct":37,"late_speed_pct":75,"early_stride_len_pct":62,"late_stride_len_pct":16,"stride_delay_pct":41,"speed_change_pct_pct":78,"archetype":"Gambler"},{"race_date":"2026-02-20","race_number":8,"horse_name":"Urban Planner","official_position":6,"post_position":8,"morning_line_odds":"15/1","post_time_odds":30.74,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":18.1,"max_time_behind":1.223,"total_running_time":6.874,"pace_consistency":0.466,"total_strides":269.2,"total_distance_ran":2019.7,"ground_loss":-4580.3,"early_speed":4.953,"late_speed":22.837,"early_stride_len":7.363,"late_stride_len":7.58,"stride_delay":13.7,"speed_change_pct":361.04,"first_position":6,"mid_position":6,"pos_change_total":0,"position_history":[6,6,5,5,4,4,5,5,5,5,6,6,6,6,6,6,6,6,6,5],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[18.1,17.7,14.6,11.4,7.2,6.4,6.6,7.9,7.7,10.6,13.5,13.8,12.0,12.4,10.9,11.6,11.6,11.2,11.1,6.5],"max_dist_behind_pct":63,"max_time_behind_pct":63,"total_running_time_pct":56,"pace_consistency_pct":67,"total_strides_pct":92,"total_distance_ran_pct":59,"ground_loss_pct":43,"early_speed_pct":14,"late_speed_pct":59,"early_stride_len_pct":94,"late_stride_len_pct":94,"stride_delay_pct":10,"speed_change_pct_pct":83,"archetype":"Gambler"},{"race_date":"2026-02-25","race_number":7,"horse_name":"Befriended","official_position":2,"post_position":6,"morning_line_odds":"5/2","post_time_odds":2.47,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":0.0,"max_time_behind":0.0,"total_running_time":6.835,"pace_consistency":0.335,"total_strides":280.3,"total_distance_ran":2016.8,"ground_loss":-4583.2,"early_speed":4.993,"late_speed":22.263,"early_stride_len":6.933,"late_stride_len":7.173,"stride_delay":14.5,"speed_change_pct":345.92,"first_position":1,"mid_position":1,"pos_change_total":-1,"position_history":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"max_dist_behind_pct":100,"max_time_behind_pct":100,"total_running_time_pct":59,"pace_consistency_pct":87,"total_strides_pct":49,"total_distance_ran_pct":89,"ground_loss_pct":14,"early_speed_pct":37,"late_speed_pct":24,"early_stride_len_pct":49,"late_stride_len_pct":56,"stride_delay_pct":52,"speed_change_pct_pct":30,"archetype":"Gambler"},{"race_date":"2026-02-25","race_number":7,"horse_name":"Hidden Presence","official_position":6,"post_position":2,"morning_line_odds":"12/1","post_time_odds":12.02,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":115.4,"max_time_behind":8.923,"total_running_time":7.414,"pace_consistency":0.367,"total_strides":301.7,"total_distance_ran":2017.8,"ground_loss":-4582.2,"early_speed":4.91,"late_speed":22.111,"early_stride_len":5.94,"late_stride_len":6.914,"stride_delay":17.5,"speed_change_pct":350.36,"first_position":6,"mid_position":4,"pos_change_total":0,"position_history":[6,6,6,6,6,4,5,5,5,5,4,4,4,5,4,5,5,5,5,6],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[115.4,81.7,53.8,35.4,24.5,17.6,13.2,10.7,10.2,8.9,8.8,9.2,9.8,11.8,10.2,9.7,11.5,12.7,11.1,9.2],"max_dist_behind_pct":2,"max_time_behind_pct":2,"total_running_time_pct":8,"pace_consistency_pct":84,"total_strides_pct":3,"total_distance_ran_pct":81,"ground_loss_pct":29,"early_speed_pct":2,"late_speed_pct":14,"early_stride_len_pct":3,"late_stride_len_pct":14,"stride_delay_pct":98,"speed_change_pct_pct":48,"archetype":"Ghost"},{"race_date":"2026-02-25","race_number":7,"horse_name":"Peak Popularity","official_position":3,"post_position":3,"morning_line_odds":"10/1","post_time_odds":6.53,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":15.6,"max_time_behind":1.207,"total_running_time":7.23,"pace_consistency":0.452,"total_strides":274.6,"total_distance_ran":2019.5,"ground_loss":-4580.5,"early_speed":4.953,"late_speed":22.162,"early_stride_len":7.096,"late_stride_len":7.292,"stride_delay":14.2,"speed_change_pct":347.44,"first_position":3,"mid_position":2,"pos_change_total":0,"position_history":[3,3,3,3,3,3,3,2,2,2,2,2,2,2,2,2,2,2,2,2],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[15.6,13.6,12.4,11.2,9.4,7.3,5.1,3.9,4.0,2.8,3.0,5.2,5.8,7.9,7.1,6.6,7.9,8.7,8.5,6.3],"max_dist_behind_pct":70,"max_time_behind_pct":65,"total_running_time_pct":22,"pace_consistency_pct":70,"total_strides_pct":78,"total_distance_ran_pct":62,"ground_loss_pct":40,"early_speed_pct":14,"late_speed_pct":17,"early_stride_len_pct":75,"late_stride_len_pct":70,"stride_delay_pct":30,"speed_change_pct_pct":37,"archetype":"Gambler"},{"race_date":"2026-02-25","race_number":7,"horse_name":"Sakura Blossom","official_position":5,"post_position":4,"morning_line_odds":"3/1","post_time_odds":1.65,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":52.9,"max_time_behind":4.091,"total_running_time":7.41,"pace_consistency":0.839,"total_strides":293.0,"total_distance_ran":2024.8,"ground_loss":-4575.2,"early_speed":4.925,"late_speed":22.184,"early_stride_len":6.517,"late_stride_len":6.94,"stride_delay":15.2,"speed_change_pct":350.41,"first_position":5,"mid_position":5,"pos_change_total":0,"position_history":[5,5,5,5,5,5,4,4,4,4,5,5,5,6,6,3,3,4,4,5],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[52.9,44.4,37.8,31.2,23.9,18.2,13.2,9.9,9.4,8.2,9.0,10.1,10.2,12.6,10.9,8.7,10.5,11.7,10.5,9.2],"max_dist_behind_pct":14,"max_time_behind_pct":14,"total_running_time_pct":11,"pace_consistency_pct":27,"total_strides_pct":13,"total_distance_ran_pct":21,"ground_loss_pct":81,"early_speed_pct":6,"late_speed_pct":21,"early_stride_len_pct":13,"late_stride_len_pct":21,"stride_delay_pct":81,"speed_change_pct_pct":49,"archetype":"Ghost"},{"race_date":"2026-02-25","race_number":7,"horse_name":"Streetwhereyoulive","official_position":4,"post_position":1,"morning_line_odds":"15/1","post_time_odds":9.59,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":44.1,"max_time_behind":3.405,"total_running_time":7.326,"pace_consistency":0.623,"total_strides":276.7,"total_distance_ran":2019.6,"ground_loss":-4580.4,"early_speed":4.937,"late_speed":21.995,"early_stride_len":6.885,"late_stride_len":7.33,"stride_delay":14.9,"speed_change_pct":345.5,"first_position":4,"mid_position":6,"pos_change_total":0,"position_history":[4,4,4,4,4,6,6,6,6,6,6,6,6,4,5,6,6,6,6,3],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[44.1,37.5,32.0,27.8,23.2,21.1,18.5,17.1,16.3,14.5,12.1,10.8,10.7,10.7,10.7,10.4,11.6,12.8,11.5,7.8],"max_dist_behind_pct":19,"max_time_behind_pct":16,"total_running_time_pct":14,"pace_consistency_pct":44,"total_strides_pct":68,"total_distance_ran_pct":60,"ground_loss_pct":41,"early_speed_pct":8,"late_speed_pct":11,"early_stride_len_pct":38,"late_stride_len_pct":79,"stride_delay_pct":70,"speed_change_pct_pct":25,"archetype":"Ghost"},{"race_date":"2026-02-25","race_number":7,"horse_name":"Virgin Colada","official_position":1,"post_position":5,"morning_line_odds":"2/1","post_time_odds":3.09,"distance":10.0,"surface":"D","race_type":"AOC","purse":104000,"max_dist_behind":11.3,"max_time_behind":0.679,"total_running_time":7.397,"pace_consistency":0.732,"total_strides":282.1,"total_distance_ran":2025.0,"ground_loss":-4575.0,"early_speed":4.982,"late_speed":22.158,"early_stride_len":6.925,"late_stride_len":7.086,"stride_delay":14.6,"speed_change_pct":344.75,"first_position":2,"mid_position":3,"pos_change_total":1,"position_history":[2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,4,4,3,3,4],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[8.5,7.8,7.9,6.0,5.6,5.3,5.0,5.5,6.7,6.7,7.0,8.0,8.0,10.1,9.6,9.5,10.6,11.3,10.1,9.0],"max_dist_behind_pct":81,"max_time_behind_pct":83,"total_running_time_pct":13,"pace_consistency_pct":33,"total_strides_pct":44,"total_distance_ran_pct":19,"ground_loss_pct":83,"early_speed_pct":30,"late_speed_pct":16,"early_stride_len_pct":44,"late_stride_len_pct":40,"stride_delay_pct":59,"speed_change_pct_pct":22,"archetype":"Gambler"},{"race_date":"2026-03-04","race_number":7,"horse_name":"Abbi Fede","official_position":4,"post_position":5,"morning_line_odds":"7/2","post_time_odds":3.83,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":8.2,"max_time_behind":0.572,"total_running_time":6.932,"pace_consistency":0.61,"total_strides":276.3,"total_distance_ran":2022.1,"ground_loss":-4577.9,"early_speed":5.019,"late_speed":22.789,"early_stride_len":7.063,"late_stride_len":7.211,"stride_delay":14.4,"speed_change_pct":354.06,"first_position":4,"mid_position":2,"pos_change_total":0,"position_history":[4,4,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,4,5],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[8.2,2.2,0.9,0.0,0.0,1.3,2.0,1.5,1.6,1.7,2.3,2.9,2.0,1.8,2.3,3.4,3.2,3.7,4.8,4.6],"max_dist_behind_pct":87,"max_time_behind_pct":84,"total_running_time_pct":48,"pace_consistency_pct":48,"total_strides_pct":70,"total_distance_ran_pct":41,"ground_loss_pct":60,"early_speed_pct":56,"late_speed_pct":52,"early_stride_len_pct":68,"late_stride_len_pct":60,"stride_delay_pct":41,"speed_change_pct_pct":60,"archetype":"Gambler"},{"race_date":"2026-03-04","race_number":7,"horse_name":"Fly Guy Mick","official_position":6,"post_position":8,"morning_line_odds":"6/1","post_time_odds":14.95,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":26.7,"max_time_behind":1.867,"total_running_time":6.98,"pace_consistency":1.014,"total_strides":284.7,"total_distance_ran":2029.8,"ground_loss":-4570.2,"early_speed":5.027,"late_speed":22.402,"early_stride_len":6.786,"late_stride_len":6.986,"stride_delay":15.0,"speed_change_pct":345.63,"first_position":6,"mid_position":7,"pos_change_total":0,"position_history":[6,6,6,5,3,4,6,7,7,7,7,7,7,7,7,7,7,6,6,6],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[26.7,13.7,8.8,5.5,3.4,4.7,7.1,8.9,9.6,11.1,11.1,11.8,11.2,11.6,10.8,10.9,9.1,8.5,8.2,5.4],"max_dist_behind_pct":40,"max_time_behind_pct":35,"total_running_time_pct":43,"pace_consistency_pct":8,"total_strides_pct":33,"total_distance_ran_pct":6,"ground_loss_pct":95,"early_speed_pct":59,"late_speed_pct":30,"early_stride_len_pct":33,"late_stride_len_pct":29,"stride_delay_pct":73,"speed_change_pct_pct":27,"archetype":"Gambler"},{"race_date":"2026-03-04","race_number":7,"horse_name":"Kicking Clear","official_position":1,"post_position":7,"morning_line_odds":"3/1","post_time_odds":4.72,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":20.6,"max_time_behind":1.247,"total_running_time":7.269,"pace_consistency":0.896,"total_strides":275.6,"total_distance_ran":2023.1,"ground_loss":-4576.9,"early_speed":5.016,"late_speed":21.961,"early_stride_len":7.229,"late_stride_len":7.135,"stride_delay":13.9,"speed_change_pct":337.81,"first_position":1,"mid_position":8,"pos_change_total":0,"position_history":[1,1,4,6,7,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[0.0,0.0,4.4,7.5,8.6,10.6,13.2,13.2,13.7,15.9,15.6,16.0,15.4,16.9,18.6,20.6,20.0,17.1,15.9,10.1],"max_dist_behind_pct":57,"max_time_behind_pct":59,"total_running_time_pct":19,"pace_consistency_pct":21,"total_strides_pct":73,"total_distance_ran_pct":35,"ground_loss_pct":67,"early_speed_pct":49,"late_speed_pct":10,"early_stride_len_pct":89,"late_stride_len_pct":48,"stride_delay_pct":16,"speed_change_pct_pct":8,"archetype":"Gambler"},{"race_date":"2026-03-04","race_number":7,"horse_name":"Niigon's Law","official_position":8,"post_position":4,"morning_line_odds":"15/1","post_time_odds":13.52,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":31.0,"max_time_behind":2.173,"total_running_time":6.82,"pace_consistency":1.012,"total_strides":283.2,"total_distance_ran":2029.7,"ground_loss":-4570.3,"early_speed":5.011,"late_speed":22.545,"early_stride_len":6.772,"late_stride_len":7.211,"stride_delay":15.1,"speed_change_pct":349.88,"first_position":8,"mid_position":3,"pos_change_total":0,"position_history":[8,8,7,7,5,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[31.0,21.0,14.0,7.6,4.9,4.4,4.7,4.7,5.0,6.2,5.5,5.5,4.3,4.5,3.7,5.6,4.5,4.2,4.7,2.8],"max_dist_behind_pct":27,"max_time_behind_pct":24,"total_running_time_pct":63,"pace_consistency_pct":10,"total_strides_pct":38,"total_distance_ran_pct":8,"ground_loss_pct":94,"early_speed_pct":44,"late_speed_pct":40,"early_stride_len_pct":32,"late_stride_len_pct":60,"stride_delay_pct":78,"speed_change_pct_pct":43,"archetype":"Gambler"},{"race_date":"2026-03-04","race_number":7,"horse_name":"Nyquistador","official_position":3,"post_position":1,"morning_line_odds":"4/1","post_time_odds":1.43,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":4.7,"max_time_behind":0.328,"total_running_time":6.65,"pace_consistency":0.276,"total_strides":284.3,"total_distance_ran":2016.1,"ground_loss":-4583.9,"early_speed":4.995,"late_speed":22.67,"early_stride_len":6.933,"late_stride_len":7.047,"stride_delay":14.5,"speed_change_pct":353.9,"first_position":3,"mid_position":1,"pos_change_total":0,"position_history":[3,3,1,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[4.7,0.5,0.0,0.1,0.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"max_dist_behind_pct":92,"max_time_behind_pct":92,"total_running_time_pct":86,"pace_consistency_pct":92,"total_strides_pct":35,"total_distance_ran_pct":90,"ground_loss_pct":11,"early_speed_pct":40,"late_speed_pct":46,"early_stride_len_pct":49,"late_stride_len_pct":33,"stride_delay_pct":52,"speed_change_pct_pct":59,"archetype":"Gambler"},{"race_date":"2026-03-04","race_number":7,"horse_name":"Otzelberger","official_position":7,"post_position":3,"morning_line_odds":"15/1","post_time_odds":45.58,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":29.4,"max_time_behind":2.059,"total_running_time":6.889,"pace_consistency":0.576,"total_strides":280.2,"total_distance_ran":2020.1,"ground_loss":-4579.9,"early_speed":4.966,"late_speed":22.302,"early_stride_len":6.848,"late_stride_len":7.147,"stride_delay":14.6,"speed_change_pct":349.13,"first_position":7,"mid_position":6,"pos_change_total":0,"position_history":[7,7,8,8,8,7,7,6,6,6,6,6,6,6,6,6,5,5,5,4],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[29.4,20.6,17.6,15.5,13.8,10.0,8.1,8.1,8.2,9.1,9.1,8.8,8.7,9.6,9.2,10.6,8.9,5.4,5.3,3.9],"max_dist_behind_pct":29,"max_time_behind_pct":27,"total_running_time_pct":54,"pace_consistency_pct":54,"total_strides_pct":52,"total_distance_ran_pct":57,"ground_loss_pct":44,"early_speed_pct":25,"late_speed_pct":27,"early_stride_len_pct":35,"late_stride_len_pct":51,"stride_delay_pct":59,"speed_change_pct_pct":41,"archetype":"Gambler"},{"race_date":"2026-03-04","race_number":7,"horse_name":"Rapoport","official_position":2,"post_position":6,"morning_line_odds":"5/2","post_time_odds":3.44,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":9.2,"max_time_behind":0.559,"total_running_time":7.035,"pace_consistency":0.532,"total_strides":282.1,"total_distance_ran":2021.2,"ground_loss":-4578.8,"early_speed":4.993,"late_speed":22.472,"early_stride_len":7.069,"late_stride_len":6.986,"stride_delay":14.4,"speed_change_pct":350.09,"first_position":2,"mid_position":5,"pos_change_total":0,"position_history":[2,2,3,3,6,6,5,5,5,5,5,5,5,5,5,5,6,7,7,7],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[0.4,0.3,2.7,4.0,5.1,6.1,6.6,6.8,7.2,8.2,8.7,8.5,8.1,8.1,7.8,9.2,9.1,9.1,9.1,6.3],"max_dist_behind_pct":84,"max_time_behind_pct":86,"total_running_time_pct":40,"pace_consistency_pct":59,"total_strides_pct":44,"total_distance_ran_pct":51,"ground_loss_pct":51,"early_speed_pct":37,"late_speed_pct":35,"early_stride_len_pct":71,"late_stride_len_pct":29,"stride_delay_pct":41,"speed_change_pct_pct":44,"archetype":"Gambler"},{"race_date":"2026-03-04","race_number":7,"horse_name":"Run Forrest Run","official_position":5,"post_position":2,"morning_line_odds":"20/1","post_time_odds":22.29,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":11.3,"max_time_behind":0.791,"total_running_time":6.772,"pace_consistency":0.479,"total_strides":281.2,"total_distance_ran":2017.8,"ground_loss":-4582.2,"early_speed":5.003,"late_speed":22.327,"early_stride_len":7.05,"late_stride_len":7.122,"stride_delay":14.2,"speed_change_pct":346.27,"first_position":5,"mid_position":4,"pos_change_total":0,"position_history":[5,5,5,4,4,5,4,4,4,4,4,4,4,4,4,4,4,4,2,2],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[11.3,6.8,6.1,5.1,4.4,4.8,5.1,5.1,5.8,7.1,7.6,6.8,6.9,7.7,6.9,7.8,6.6,4.4,3.1,2.0],"max_dist_behind_pct":81,"max_time_behind_pct":78,"total_running_time_pct":71,"pace_consistency_pct":63,"total_strides_pct":46,"total_distance_ran_pct":81,"ground_loss_pct":29,"early_speed_pct":43,"late_speed_pct":29,"early_stride_len_pct":67,"late_stride_len_pct":44,"stride_delay_pct":30,"speed_change_pct_pct":32,"archetype":"Gambler"},{"race_date":"2026-03-06","race_number":6,"horse_name":"Liam's Latte","official_position":4,"post_position":3,"morning_line_odds":"6/1","post_time_odds":5.7,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":25.0,"max_time_behind":1.771,"total_running_time":7.108,"pace_consistency":0.384,"total_strides":275.2,"total_distance_ran":2017.8,"ground_loss":-4582.2,"early_speed":4.969,"late_speed":21.908,"early_stride_len":7.197,"late_stride_len":7.11,"stride_delay":14.0,"speed_change_pct":340.89,"first_position":4,"mid_position":5,"pos_change_total":0,"position_history":[4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[25.0,20.2,16.3,12.5,11.3,11.2,10.2,9.3,8.9,8.8,9.3,7.7,8.1,9.0,9.4,6.8,7.4,6.2,6.6,8.6],"max_dist_behind_pct":44,"max_time_behind_pct":38,"total_running_time_pct":33,"pace_consistency_pct":79,"total_strides_pct":75,"total_distance_ran_pct":81,"ground_loss_pct":29,"early_speed_pct":27,"late_speed_pct":8,"early_stride_len_pct":84,"late_stride_len_pct":41,"stride_delay_pct":19,"speed_change_pct_pct":16,"archetype":"Gambler"},{"race_date":"2026-03-06","race_number":6,"horse_name":"Raconteuse","official_position":3,"post_position":4,"morning_line_odds":"5/2","post_time_odds":0.7,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":21.0,"max_time_behind":1.486,"total_running_time":6.802,"pace_consistency":0.403,"total_strides":290.3,"total_distance_ran":2018.0,"ground_loss":-4582.0,"early_speed":4.999,"late_speed":21.773,"early_stride_len":6.727,"late_stride_len":6.82,"stride_delay":15.1,"speed_change_pct":335.55,"first_position":3,"mid_position":3,"pos_change_total":0,"position_history":[3,2,2,2,2,2,2,2,2,2,3,3,2,3,3,3,3,2,2,2],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[21.0,16.4,10.5,5.8,4.1,4.4,4.0,3.4,3.4,2.9,3.5,3.1,2.8,3.5,4.6,3.9,4.3,3.1,3.9,3.6],"max_dist_behind_pct":52,"max_time_behind_pct":49,"total_running_time_pct":68,"pace_consistency_pct":75,"total_strides_pct":21,"total_distance_ran_pct":71,"ground_loss_pct":32,"early_speed_pct":41,"late_speed_pct":3,"early_stride_len_pct":29,"late_stride_len_pct":8,"stride_delay_pct":78,"speed_change_pct_pct":5,"archetype":"Gambler"},{"race_date":"2026-03-06","race_number":6,"horse_name":"Roiling","official_position":2,"post_position":6,"morning_line_odds":"5/1","post_time_odds":3.03,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":17.6,"max_time_behind":1.191,"total_running_time":6.967,"pace_consistency":0.824,"total_strides":287.6,"total_distance_ran":2024.5,"ground_loss":-4575.5,"early_speed":5.018,"late_speed":21.829,"early_stride_len":6.929,"late_stride_len":6.879,"stride_delay":14.2,"speed_change_pct":334.99,"first_position":2,"mid_position":4,"pos_change_total":0,"position_history":[2,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[16.8,17.6,16.3,12.1,8.5,5.9,4.4,4.5,4.4,4.1,4.8,4.7,5.5,6.5,7.5,6.1,6.1,4.5,5.5,6.3],"max_dist_behind_pct":67,"max_time_behind_pct":67,"total_running_time_pct":44,"pace_consistency_pct":29,"total_strides_pct":29,"total_distance_ran_pct":27,"ground_loss_pct":78,"early_speed_pct":54,"late_speed_pct":6,"early_stride_len_pct":46,"late_stride_len_pct":11,"stride_delay_pct":30,"speed_change_pct_pct":2,"archetype":"Gambler"},{"race_date":"2026-03-06","race_number":6,"horse_name":"Smokin Hot Blonde","official_position":1,"post_position":1,"morning_line_odds":"15/1","post_time_odds":9.73,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":0.0,"max_time_behind":0.0,"total_running_time":6.584,"pace_consistency":0.467,"total_strides":299.0,"total_distance_ran":2018.8,"ground_loss":-4581.2,"early_speed":5.014,"late_speed":21.827,"early_stride_len":6.711,"late_stride_len":6.618,"stride_delay":14.8,"speed_change_pct":335.33,"first_position":1,"mid_position":1,"pos_change_total":0,"position_history":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"max_dist_behind_pct":100,"max_time_behind_pct":100,"total_running_time_pct":90,"pace_consistency_pct":65,"total_strides_pct":6,"total_distance_ran_pct":65,"ground_loss_pct":37,"early_speed_pct":48,"late_speed_pct":5,"early_stride_len_pct":24,"late_stride_len_pct":2,"stride_delay_pct":67,"speed_change_pct_pct":3,"archetype":"Gambler"},{"race_date":"2026-03-06","race_number":6,"horse_name":"Tikihut","official_position":6,"post_position":2,"morning_line_odds":"6/1","post_time_odds":10.03,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":60.8,"max_time_behind":4.299,"total_running_time":6.93,"pace_consistency":0.665,"total_strides":294.5,"total_distance_ran":2020.4,"ground_loss":-4579.6,"early_speed":4.965,"late_speed":22.025,"early_stride_len":6.405,"late_stride_len":6.976,"stride_delay":16.0,"speed_change_pct":343.55,"first_position":6,"mid_position":2,"pos_change_total":0,"position_history":[6,6,6,6,6,6,5,4,4,3,2,2,3,2,2,2,2,3,3,3],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[60.8,45.9,35.5,26.9,21.1,16.8,12.2,7.4,4.9,3.0,3.4,2.4,3.0,2.5,2.8,2.2,3.0,3.3,3.9,5.7],"max_dist_behind_pct":8,"max_time_behind_pct":10,"total_running_time_pct":49,"pace_consistency_pct":41,"total_strides_pct":10,"total_distance_ran_pct":54,"ground_loss_pct":48,"early_speed_pct":22,"late_speed_pct":13,"early_stride_len_pct":8,"late_stride_len_pct":24,"stride_delay_pct":94,"speed_change_pct_pct":21,"archetype":"Ghost"},{"race_date":"2026-03-06","race_number":6,"horse_name":"Una Quaedam","official_position":5,"post_position":5,"morning_line_odds":"15/1","post_time_odds":21.91,"distance":10.0,"surface":"D","race_type":"MSW","purse":100000,"max_dist_behind":31.3,"max_time_behind":2.212,"total_running_time":7.254,"pace_consistency":0.597,"total_strides":292.9,"total_distance_ran":2021.7,"ground_loss":-4578.3,"early_speed":4.964,"late_speed":21.659,"early_stride_len":6.646,"late_stride_len":6.786,"stride_delay":15.3,"speed_change_pct":336.29,"first_position":5,"mid_position":6,"pos_change_total":0,"position_history":[5,5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"gate_history":[0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0,9.5],"distance_behind_history":[31.3,28.1,23.6,18.6,16.8,16.2,14.8,12.6,11.1,12.2,14.3,12.4,12.7,15.1,14.9,11.8,13.1,11.3,11.9,11.1],"max_dist_behind_pct":22,"max_time_behind_pct":22,"total_running_time_pct":21,"pace_consistency_pct":49,"total_strides_pct":14,"total_distance_ran_pct":48,"ground_loss_pct":56,"early_speed_pct":21,"late_speed_pct":2,"early_stride_len_pct":21,"late_stride_len_pct":5,"stride_delay_pct":86,"speed_change_pct_pct":6,"archetype":"Gambler"}];
+
+const UPCOMING_RACES = [
+  {
+    track: "AQU", date: "3/27/26", race: 1, name: "Maiden Special Weight",
+    dist: "6f", surface: "Dirt", purse: "$70,000",
+    horses: [
+      { name: "Luna Moth",       odds: "9/5",  jockey: "Rivera, Jr." },
+      { name: "Hauntress",       odds: "6/1",  jockey: "Rivera" },
+      { name: "Troubled Luck",   odds: "10/1", jockey: "Vargas, Jr." },
+      { name: "Floge",           odds: "8/5",  jockey: "Lezcano" },
+      { name: "Foxy Cara",       odds: "4/1",  jockey: "Kocakaya" },
+      { name: "She's Complicated", odds: "8/1", jockey: "Gutierrez" },
+    ]
+  },
+  {
+    track: "AQU", date: "3/27/26", race: 2, name: "Allowance Optional Clm",
+    dist: "8.5f", surface: "Dirt", purse: "$90,000",
+    horses: [
+      { name: "Southeastern",   odds: "9/2",  jockey: "Lezcano" },
+      { name: "Top Player",     odds: "6/1",  jockey: "Rodriguez" },
+      { name: "Hong Kong Phooey", odds: "8/1", jockey: "Silvera" },
+      { name: "Bold Love",      odds: "7/2",  jockey: "Rivera, Jr." },
+      { name: "Carmouche",      odds: "2/1",  jockey: "Franco" },
+    ]
+  },
+  {
+    track: "AQU", date: "3/27/26", race: 3, name: "Starter Allowance",
+    dist: "6f", surface: "Dirt", purse: "$52,000",
+    horses: [
+      { name: "Murgia",         odds: "30/1", jockey: "Lezcano" },
+      { name: "Lac Macaza",     odds: "4/1",  jockey: "Silvera" },
+      { name: "Villa Pino",     odds: "9/5",  jockey: "Gutierrez" },
+      { name: "Elliott",        odds: "12/1", jockey: "Rivera" },
+      { name: "Jackpot",        odds: "5/1",  jockey: "Silvera" },
+    ]
+  },
+  {
+    track: "AQU", date: "3/27/26", race: 4, name: "Claiming $25,000",
+    dist: "6f", surface: "Dirt", purse: "$35,000",
+    horses: [
+      { name: "Compton",        odds: "5/2",  jockey: "Franco" },
+      { name: "Santana, Jr.",   odds: "6/1",  jockey: "Rivera" },
+      { name: "Baez",           odds: "5/1",  jockey: "Silvera" },
+      { name: "Gomez",          odds: "20/1", jockey: "Rodriguez" },
+      { name: "Cancel",         odds: "2/1",  jockey: "Lezcano" },
+    ]
+  },
+  {
+    track: "AQU", date: "3/27/26", race: 5, name: "Stakes — Spring Dash",
+    dist: "5.5f", surface: "Turf", purse: "$150,000",
+    horses: [
+      { name: "Shankar",        odds: "3/1",  jockey: "Silvera" },
+      { name: "Kicking Clear",  odds: "4/5",  jockey: "Rodriguez" },
+      { name: "Rapoport",       odds: "6/1",  jockey: "Lezcano" },
+      { name: "Mount Horeb",    odds: "10/1", jockey: "Franco" },
+      { name: "Siesta Key",     odds: "5/1",  jockey: "Gutierrez" },
+    ]
+  },
+];
+</script>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+const ARCH = {
+  Ghost:   { color: '#6B4FA8', bg: '#F2EEFF', emoji: '👻', desc: 'Comes from nowhere' },
+  Rocket:  { color: '#C05C1A', bg: '#FFF0E6', emoji: '🚀', desc: 'Blazing front-runner' },
+  Grinder: { color: '#1A7A6E', bg: '#EBF7F5', emoji: '⚙️', desc: 'Steady & relentless' },
+  Gambler: { color: '#B03060', bg: '#FDEEF3', emoji: '🎲', desc: 'Boom or bust' },
+};
+
+const GPS13 = [
+  { key: 'late_speed',         pct: 'late_speed_pct',         label: 'Late Speed',       unit: 'ft/s' },
+  { key: 'early_speed',        pct: 'early_speed_pct',        label: 'Early Speed',      unit: 'ft/s' },
+  { key: 'speed_change_pct',   pct: 'speed_change_pct_pct',   label: 'Speed Change',     unit: '%'    },
+  { key: 'late_stride_len',    pct: 'late_stride_len_pct',    label: 'Late Stride Len',  unit: 'ft'   },
+  { key: 'early_stride_len',   pct: 'early_stride_len_pct',   label: 'Early Stride Len', unit: 'ft'   },
+  { key: 'stride_delay',       pct: 'stride_delay_pct',       label: 'Stride Delay',     unit: 'st'   },
+  { key: 'pace_consistency',   pct: 'pace_consistency_pct',   label: 'Pace Consistency', unit: 'σ'    },
+  { key: 'ground_loss',        pct: 'ground_loss_pct',        label: 'Ground Loss',      unit: 'ft'   },
+  { key: 'max_dist_behind',    pct: 'max_dist_behind_pct',    label: 'Max Gap Behind',   unit: 'ft'   },
+  { key: 'max_time_behind',    pct: 'max_time_behind_pct',    label: 'Max Time Behind',  unit: 's'    },
+  { key: 'total_running_time', pct: 'total_running_time_pct', label: 'Running Time',     unit: 's'    },
+  { key: 'total_strides',      pct: 'total_strides_pct',      label: 'Total Strides',    unit: ''     },
+  { key: 'total_distance_ran', pct: 'total_distance_ran_pct', label: 'Total Distance',   unit: 'ft'   },
+];
+
+function pBarColor(pct) {
+  if (pct >= 80) return '#1A7A6E';
+  if (pct >= 50) return '#C9A84C';
+  return '#C0392B';
+}
+
+function tagFor(pct) {
+  if (pct >= 90) return { t: `Top ${100 - pct + 1}%`, c: '#1A7A6E' };
+  if (pct >= 75) return { t: 'Above Avg',   c: '#9A6F2F' };
+  if (pct >= 45) return { t: 'Average',     c: '#7A7268' };
+  return             { t: 'Below Avg',   c: '#C0392B' };
+}
+
+function posColor(p) {
+  if (p === 1) return '#9A6F2F';
+  if (p === 2) return '#6B7C8D';
+  if (p === 3) return '#A0522D';
+  return '#C8C0B4';
+}
+
+function fmtVal(h, m) {
+  const v = h[m.key];
+  if (v === null || v === undefined) return '—';
+  if (m.key === 'ground_loss') return `${Math.abs(v).toFixed(0)}${m.unit}`;
+  if (m.unit === '%') return `${v.toFixed(0)}${m.unit}`;
+  if (m.unit === 'ft/s' || m.unit === 'ft') return `${v.toFixed(1)}${m.unit}`;
+  if (m.unit === 's') return `${v.toFixed(2)}${m.unit}`;
+  if (m.unit === 'σ') return `${m.unit}${v.toFixed(2)}`;
+  return `${v.toFixed(1)}${m.unit}`;
+}
+
+function narrative(h) {
+  const bits = [];
+  const cb = h.mid_position - h.official_position;
+  if (cb >= 5) bits.push(`Came from ${h.mid_position}th at the midpoint to finish ${h.official_position}${['','st','nd','rd'][h.official_position]||'th'} — one of the biggest moves in the field.`);
+  else if (cb >= 3) bits.push(`Buried in the pack at halfway, then found another gear when it mattered most.`);
+  else if (h.first_position <= 2 && h.official_position <= 3) bits.push(`Controlled the pace from the front and never gave it up.`);
+  if (h.late_speed_pct >= 90) bits.push(`Posted a top-${100 - h.late_speed_pct + 1}% closing speed — elite finishing kick.`);
+  if (h.early_stride_len_pct >= 85 && h.late_stride_len_pct >= 85) bits.push(`Exceptional stride efficiency from start to finish.`);
+  else if (h.late_stride_len_pct >= 85) bits.push(`Stride length actually grew in the final furlong — a horse that wasn't done.`);
+  if (h.ground_loss_pct >= 88) bits.push(`Ran one of the tightest paths in the field — no wasted distance.`);
+  if (h.pace_consistency_pct >= 85) bits.push(`Rock-solid pace consistency — every split nearly identical.`);
+  if (h.max_dist_behind > 60 && h.official_position <= 4) bits.push(`Was ${h.max_dist_behind.toFixed(0)} feet behind at worst — and still made the top 4.`);
+  if (h.official_position > 5 && h.late_speed_pct >= 80) bits.push(`The finish position doesn't tell the whole story — GPS shows elite closing ability the scoreboard missed.`);
+  if (h.total_strides_pct >= 80) bits.push(`Used fewer strides than average — raw mechanical efficiency.`);
+  if (!bits.length) bits.push(`${ARCH[h.archetype]?.emoji} A classic ${h.archetype} — ${ARCH[h.archetype]?.desc.toLowerCase()}. The GPS profile reveals what the final position can't.`);
+  return bits.join(' ');
+}
+
+function PosChart({ history, gates }) {
+  const n = history.length;
+  if (n < 2) return null;
+  const maxP = Math.max(...history, 1);
+  const W = 320, H = 68, pd = 10;
+  const xs = gates.map((_, i) => pd + (i / (n - 1)) * (W - 2 * pd));
+  const ys = history.map(p => pd + ((p - 1) / Math.max(maxP - 1, 1)) * (H - 2 * pd));
+  const path = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
+  const area = `${path} L${xs[n-1].toFixed(1)},${H} L${xs[0].toFixed(1)},${H} Z`;
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#1A7A6E" stopOpacity="0.15"/>
+          <stop offset="100%" stopColor="#1A7A6E" stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d={area} fill="url(#cg)"/>
+      <path d={path} fill="none" stroke="#1A7A6E" strokeWidth="1.8" strokeLinejoin="round"/>
+      {xs.map((x, i) => (
+        <circle key={i} cx={x} cy={ys[i]} r={i === 0 || i === n-1 ? 3.5 : 2}
+          fill={i === n-1 ? '#9A6F2F' : i === 0 ? '#1A7A6E' : '#E2DDD5'}
+          stroke={i === n-1 ? '#9A6F2F' : '#1A7A6E'} strokeWidth="1.2"/>
+      ))}
+      <text x={xs[0]} y={ys[0]-7} fill="#A09890" fontSize="8" textAnchor="middle">P{history[0]}</text>
+      <text x={xs[n-1]} y={ys[n-1]-7} fill="#9A6F2F" fontSize="8" textAnchor="middle">P{history[n-1]}</text>
+    </svg>
+  );
+}
+
+/* ── NEWS TICKER ────────────────────────────────────────────── */
+function NewsTicker() {
+  const items = UPCOMING_RACES.flatMap(r =>
+    r.horses.map(h => ({ race: `AQU R${r.race}`, horse: h.name, odds: h.odds, dist: r.dist }))
+  );
+  const doubled = [...items, ...items];
+  return (
+    <div className="news-board">
+      <div className="news-inner">
+        <div className="news-label">🏇 LIVE ENTRIES</div>
+        <div className="ticker-wrap">
+          <div className="ticker-track">
+            {doubled.map((item, i) => (
+              <div key={i} className="ticker-item">
+                <div className="ticker-dot" style={{ background: '#C9A84C' }}/>
+                <span className="ticker-race">{item.race}</span>
+                <span className="ticker-sep">·</span>
+                <span className="ticker-horse">{item.horse}</span>
+                <span className="ticker-odds">{item.odds}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── UPCOMING RACES BOARD ────────────────────────────────────── */
+function UpcomingBoard() {
+  return (
+    <div className="upcoming-section">
+      <div className="upcoming-header">
+        <div>
+          <div className="upcoming-title">Upcoming Races — Aqueduct 3/27</div>
+          <div className="upcoming-sub">Morning line odds · Post positions · 5 races today</div>
+        </div>
+        <div className="live-dot">
+          <div className="live-pulse"/>
+          LIVE ENTRIES
+        </div>
+      </div>
+      <div className="race-cards-row">
+        {UPCOMING_RACES.map(r => {
+          const fav = r.horses.reduce((best, h) => {
+            const toDecimal = o => { const [n,d]=o.split('/'); return parseInt(n)/parseInt(d); };
+            return toDecimal(h.odds) < toDecimal(best.odds) ? h : best;
+          }, r.horses[0]);
+          return (
+            <div key={r.race} className="race-news-card">
+              <div className="rnc-top">
+                <span className="rnc-track">{r.track}</span>
+                <span className="rnc-num">Race {r.race}</span>
+              </div>
+              <div className="rnc-race-name">{r.name}</div>
+              <div className="rnc-meta">
+                <span className="rnc-tag rnc-tag-dist">{r.dist}</span>
+                <span className="rnc-tag rnc-tag-surf">{r.surface}</span>
+                <span className="rnc-tag rnc-tag-purse">{r.purse}</span>
+              </div>
+              <div className="rnc-horses">
+                {r.horses.slice(0, 4).map(h => (
+                  <div key={h.name} className="rnc-horse-row">
+                    <span className="rnc-horse-name">{h.name}</span>
+                    <span className={`rnc-horse-odds ${h.name === fav.name ? 'fav' : ''}`}>
+                      {h.name === fav.name ? '⭐ ' : ''}{h.odds}
+                    </span>
+                  </div>
+                ))}
+                {r.horses.length > 4 && (
+                  <div className="rnc-more">+{r.horses.length - 4} more runners</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── STORY CARD ─────────────────────────────────────────────── */
+function StoryCard({ horse }) {
+  const arch = ARCH[horse.archetype] || ARCH.Gambler;
+  const narr = narrative(horse);
+  const pc = posColor(horse.official_position);
+  return (
+    <div className="scard">
+      <div className="scard-header">
+        <div>
+          <div className="horse-title">{horse.horse_name}</div>
+          <div className="meta-row">
+            <span className="mtag mtag-race">Race {horse.race_number} · {horse.race_date}</span>
+            <span className="mtag mtag-surf">{horse.surface === 'D' ? '🟤 Dirt' : '🟢 Turf'} · {horse.distance}f · {horse.race_type}</span>
+            <span className="mtag mtag-purse">${horse.purse.toLocaleString()}</span>
+          </div>
+        </div>
+        <div className="card-finish">
+          <div className="finish-num" style={{ color: pc }}>{horse.official_position}<sup style={{ fontSize: '18px', verticalAlign: 'super' }}>{horse.official_position===1?'st':horse.official_position===2?'nd':horse.official_position===3?'rd':'th'}</sup></div>
+          <div className="finish-lbl">Finish</div>
+        </div>
+      </div>
+
+      <div className="arch-strip" style={{ background: arch.bg, color: arch.color, borderColor: arch.color + '25' }}>
+        <span style={{ fontSize: '14px' }}>{arch.emoji}</span>
+        <span>{horse.archetype.toUpperCase()}</span>
+        <span style={{ opacity: .4, fontSize: '9px' }}>·</span>
+        <span style={{ fontWeight: 400, letterSpacing: '1px', fontSize: '9px', opacity: .7 }}>{arch.desc.toUpperCase()}</span>
+        <span style={{ marginLeft: 'auto', fontFamily: "'DM Mono',monospace", fontSize: '11px', opacity: .6 }}>
+          ML {horse.morning_line_odds} · Post {horse.post_position}
+        </span>
+      </div>
+
+      <div className="card-body">
+        <div className="col-left">
+          <div className="sec-title">All 13 GPS Metrics — Percentile vs Field</div>
+          <div className="pbar-list">
+            {GPS13.map(m => {
+              const pct = horse[m.pct] || 0;
+              const col = pBarColor(pct);
+              return (
+                <div key={m.key} className="pbar-row">
+                  <div className="pbar-label">{m.label}</div>
+                  <div className="pbar-track">
+                    <div className="pbar-fill" style={{ width: `${pct}%`, background: col }}/>
+                  </div>
+                  <div className="pbar-num" style={{ color: col }}>{pct}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="col-right">
+          <div className="sec-title">GPS Values</div>
+          <div className="mgrid">
+            {GPS13.map(m => {
+              const pct = horse[m.pct] || 0;
+              const tag = tagFor(pct);
+              return (
+                <div key={m.key} className="mcard">
+                  <div className="mcard-top" style={{ background: pBarColor(pct) }}/>
+                  <div className="mcard-name">{m.label}</div>
+                  <div className="mcard-val">{fmtVal(horse, m)}</div>
+                  <div className="mcard-tag" style={{ color: tag.c }}>{tag.t}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="chart-wrap">
+        <div className="sec-title" style={{ paddingTop: '16px' }}>Position Through Race — Gate by Gate</div>
+        <div className="chart-inner">
+          <PosChart history={horse.position_history} gates={horse.gate_history}/>
+          <div className="chart-labs">
+            <span className="chart-lab">Start</span>
+            <span className="chart-lab" style={{ color: '#9A6F2F' }}>Finish</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="narr-wrap">
+        <div className="narr-box">
+          <div className="narr-lbl">🗣 GPS Race Story</div>
+          <div className="narr-text">"{narr}"</div>
+          <div className="share-row">
+            <button className="sbtn sbtn-primary" onClick={() => {
+              navigator.clipboard?.writeText(`${horse.horse_name} · Race ${horse.race_number}: "${narr}" #RaceIQ #HorseRacing #GPS`);
+              alert('📋 Copied! Ready for TikTok or Instagram.');
+            }}>📱 Copy Caption</button>
+            <button className="sbtn sbtn-sec" onClick={() => {
+              const lines = [`🏇 ${horse.horse_name} — GPS Breakdown`, `Race ${horse.race_number} · ${horse.race_date} · Finish: P${horse.official_position}`, `Archetype: ${horse.archetype} ${ARCH[horse.archetype]?.emoji}`, ``, ...GPS13.map(m => `${m.label}: ${fmtVal(horse,m)} (${horse[m.pct]||0}th pct)`), ``, narr, `#RaceIQ #HorseRacing`].join('\n');
+              navigator.clipboard?.writeText(lines);
+              alert('📋 Full stats copied!');
+            }}>📊 Copy Full Stats</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── LEADERBOARD ─────────────────────────────────────────────── */
+function Leaderboard({ data }) {
+  const secs = [
+    { title: 'Fastest Closers',     icon: '⚡', color: '#1A7A6E', bg: '#EBF7F5', items: [...data].sort((a,b)=>(b.late_speed||0)-(a.late_speed||0)).slice(0,5),         stat: h=>`${h.late_speed?.toFixed(1)} ft/s`,   sub: h=>`Race ${h.race_number} · P${h.official_position}` },
+    { title: 'Fastest Out of Gate', icon: '🚀', color: '#C05C1A', bg: '#FFF0E6', items: [...data].sort((a,b)=>(b.early_speed||0)-(a.early_speed||0)).slice(0,5),        stat: h=>`${h.early_speed?.toFixed(1)} ft/s`,  sub: h=>`Race ${h.race_number} · P${h.official_position}` },
+    { title: 'Biggest Comebacks',   icon: '👻', color: '#6B4FA8', bg: '#F2EEFF', items: [...data].filter(h=>h.mid_position-h.official_position>=3).sort((a,b)=>(b.mid_position-b.official_position)-(a.mid_position-a.official_position)).slice(0,5), stat: h=>`+${h.mid_position-h.official_position} pos`, sub: h=>`P${h.mid_position} → P${h.official_position}` },
+    { title: 'Best Stride Efficiency', icon: '🦾', color: '#1A7A6E', bg: '#EBF7F5', items: [...data].sort((a,b)=>(b.late_stride_len||0)-(a.late_stride_len||0)).slice(0,5), stat: h=>`${h.late_stride_len?.toFixed(2)} ft`, sub: h=>`Late stride length` },
+    { title: 'Most Consistent Pace', icon: '⭐', color: '#9A6F2F', bg: '#FDF6E8', items: [...data].sort((a,b)=>b.pace_consistency_pct-a.pace_consistency_pct).slice(0,5), stat: h=>`σ ${h.pace_consistency.toFixed(2)}`, sub: h=>`${h.pace_consistency_pct}th percentile` },
+    { title: 'Robbed by Scoreboard', icon: '😤', color: '#B03060', bg: '#FDEEF3', items: [...data].filter(h=>h.official_position>4&&h.late_speed_pct>=80).sort((a,b)=>b.late_speed_pct-a.late_speed_pct).slice(0,5), stat: h=>`P${h.official_position}`, sub: h=>`${h.late_speed_pct}th pct closing speed` },
+  ];
+  return (
+    <div className="lb">
+      {secs.map(s => (
+        <div key={s.title}>
+          <div className="lb-head">
+            <div className="lb-icon" style={{ background: s.bg }}>{s.icon}</div>
+            <span style={{ color: s.color }}>{s.title}</span>
+          </div>
+          <div className="lb-cards">
+            {s.items.map((h, i) => (
+              <div key={h.horse_name + h.race_date} className="lcard">
+                <div className={`lrank ${i===0?'r1':i===1?'r2':i===2?'r3':''}`}>{i + 1}</div>
+                <div className="linfo">
+                  <div className="lhorse">{h.horse_name}</div>
+                  <div className="lsub">{s.sub(h)}</div>
+                </div>
+                <div className="lstat" style={{ color: s.color }}>{s.stat(h)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── TRENDS ──────────────────────────────────────────────────── */
+function Trends({ data }) {
+  const avgLS = (data.reduce((s,h)=>s+(h.late_speed||0),0)/data.length).toFixed(1);
+  const avgES = (data.reduce((s,h)=>s+(h.early_speed||0),0)/data.length).toFixed(1);
+  const strideGrowers = data.filter(h=>(h.late_stride_len||0)>(h.early_stride_len||0));
+  const robbed = data.filter(h=>h.official_position>4&&h.late_speed_pct>=80);
+  const bigCB = data.filter(h=>h.mid_position-h.official_position>=5);
+  const efficient = data.filter(h=>h.total_strides_pct>=75);
+  const trends = [
+    { icon:'⚡', title:'Late Speed Beats Early Speed', sub:'The metric that decides races',
+      body: <><span className="thi">{avgES} ft/s early</span> → <span className="thi">{avgLS} ft/s late</span>. That acceleration gap is where races are won and lost — completely invisible in traditional finishing times.</>,
+      hook: `"The race doesn't start until the final furlong."` },
+    { icon:'🦾', title:'Stride Length Tells the Real Story', sub:`${strideGrowers.length} of ${data.length} horses grew their stride late`,
+      body: <><span className="thi">{strideGrowers.length} horses</span> had longer strides in the final furlong than at the start — actually accelerating at the finish. Horses that shorten their stride are fading. GPS sees this instantly.</>,
+      hook: `"Stride getting longer? That horse wasn't done."` },
+    { icon:'😤', title:`${robbed.length} Horses Were GPS-Robbed`, sub:'Strong metrics, bad finish position',
+      body: <><span className="thi">{robbed.length} horses</span> finished outside the top 4 but had top-20% closing speed. Trapped, blocked, or drawn wide. GPS finds them. Traditional stats don't.</>,
+      hook: `"Lost the race. Won the GPS. Back them next time."` },
+    { icon:'👻', title:`${bigCB.length} Five-Plus Spot Comebacks`, sub:'Drama that never shows on the form card',
+      body: <><span className="thi">{bigCB.length} horses</span> gained 5+ positions between midpoint and finish. That's explosive late-race action that generates engagement — and it's in every single race.</>,
+      hook: `"Was last. Finished 3rd. Nobody noticed until GPS."` },
+    { icon:'🎯', title:'Total Strides = Hidden Efficiency', sub:`${efficient.length} horses above 75th percentile`,
+      body: <>Fewer strides for the same distance means better technique and less fatigue. <span className="thi">{efficient.length} horses</span> ran measurably more efficiently than average — a metric no traditional form guide captures.</>,
+      hook: `"Fewer strides. Same distance. That's the edge."` },
+    { icon:'📱', title:'Every Race = A Week of Content', sub:'The auto-generation pipeline',
+      body: <>13 GPS metrics → 1 story card → 1 TikTok caption → 1 fantasy pick → 1 leaderboard. <span className="thi">Each of the {data.length} performances</span> auto-generates shareable content. Horse racing's Spotify Wrapped moment.</>,
+      hook: `"This isn't analytics. This is content."` },
+  ];
+  return (
+    <div>
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--muted2)', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '5px' }}>
+          {data.length} performances · {new Set(data.map(h=>h.race_date+h.race_number)).size} races · All 13 GPS metrics
+        </div>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: '22px', fontWeight: '700', color: 'var(--ink)' }}>GPS Insights That Would Go Viral</div>
+      </div>
+      <div className="tgrid">
+        {trends.map(t => (
+          <div key={t.title} className="tcard">
+            <div className="thead2">
+              <div className="ticon">{t.icon}</div>
+              <div><div className="ttitle">{t.title}</div><div className="tsub">{t.sub}</div></div>
+            </div>
+            <div className="tbody">{t.body}</div>
+            <div className="thook">{t.hook}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── APP ROOT ────────────────────────────────────────────────── */
+function App() {
+  const [tab, setTab] = useState('cards');
+  const [selRace, setSelRace] = useState('all');
+  const [selKey, setSelKey] = useState(null);
+
+  const races = useMemo(() => {
+    const seen = new Set();
+    return RACE_DATA.filter(h => {
+      const k = h.race_date + '_' + h.race_number;
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    }).map(h => ({ key: h.race_date + '_' + h.race_number, label: `${h.race_date} R${h.race_number}` }));
+  }, []);
+
+  const horses = useMemo(() => {
+    if (selRace === 'all') return RACE_DATA;
+    const [d, n] = selRace.split('_');
+    return RACE_DATA.filter(h => h.race_date === d && h.race_number === parseInt(n));
+  }, [selRace]);
+
+  const active = useMemo(() =>
+    selKey ? RACE_DATA.find(h => h.horse_name + h.race_date + h.race_number === selKey) : null
+  , [selKey]);
+
+  return (
+    <div>
+      <NewsTicker/>
+      <div className="app">
+        <UpcomingBoard/>
+
+        <div className="header">
+          <div className="logo">
+            <div className="logo-mark">🏇</div>
+            <div>
+              <div className="logo-name">Race<span>IQ</span></div>
+              <div className="logo-sub">GPS Story Cards · Turfway Park 2026</div>
+            </div>
+          </div>
+          <div className="gps-badge">🛰 ALL 13 GPS METRICS</div>
+        </div>
+
+        <div className="tabs">
+          {[['cards','🃏 Story Cards'],['leaderboard','🏆 Leaderboards'],['trends','📱 Viral Insights']].map(([id,lbl]) => (
+            <button key={id} className={`tab ${tab===id?'active':''}`} onClick={() => setTab(id)}>{lbl}</button>
+          ))}
+        </div>
+
+        {tab === 'cards' && <>
+          <div className="race-row">
+            <button className={`rpill ${selRace==='all'?'active':''}`} onClick={() => { setSelRace('all'); setSelKey(null); }}>All Races</button>
+            {races.map(r => (
+              <button key={r.key} className={`rpill ${selRace===r.key?'active':''}`}
+                onClick={() => { setSelRace(r.key); setSelKey(null); }}>{r.label}</button>
+            ))}
+          </div>
+          <div className="hgrid">
+            {horses.map(h => {
+              const ac = ARCH[h.archetype] || ARCH.Gambler;
+              const k = h.horse_name + h.race_date + h.race_number;
+              const pc = posColor(h.official_position);
+              return (
+                <button key={k} className={`hbtn ${selKey===k?'active':''}`} onClick={() => setSelKey(selKey===k?null:k)}>
+                  <div className="arch-pip" style={{ background: ac.color }}/>
+                  <div className="hbtn-name">{h.horse_name}</div>
+                  <div className="hbtn-foot">
+                    <span className="pos-dot" style={{ background: pc, color: h.official_position<=3?'#fff':'#7A7268' }}>{h.official_position}</span>
+                    <span>{ac.emoji} {h.archetype}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {active
+            ? <StoryCard horse={active}/>
+            : <div className="empty"><div className="big">🏇</div><p>Select a horse above to generate their GPS Story Card</p></div>}
+        </>}
+
+        {tab === 'leaderboard' && <Leaderboard data={RACE_DATA}/>}
+        {tab === 'trends' && <Trends data={RACE_DATA}/>}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body>
+</html>
